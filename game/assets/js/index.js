@@ -1,7 +1,7 @@
 var Phaser  = Phaser  || {};
 var KageClone = KageClone || {};
 KageClone.version = "0.0.1a";
-KageClone.shouldDebug = true;
+KageClone.shouldDebug = false;
 KageClone.getVersion = function () {
     "use strict";
     return this.version;
@@ -15,7 +15,7 @@ var WORLCONFIG = {
 
 function preload() {
     "use strict";
-    KageClone.game.load.tilemap('initial-level', 'assets/tilemaps/level5.json', null, Phaser.Tilemap.TILED_JSON);
+    KageClone.game.load.tilemap('initial-level', 'assets/levels/level4.json', null, Phaser.Tilemap.TILED_JSON);
     KageClone.game.load.image('gameTiles', 'assets/images/32x32_tileset.jpg');
     KageClone.game.load.image('pauseMenu', 'assets/images/pause_menu_back.jpg');
     KageClone.game.load.image('selectMenu', 'assets/images/pause_menu_select.png');
@@ -213,5 +213,5 @@ function toggleDebug() {
     "use strict";
     KageClone.shouldDebug = !KageClone.shouldDebug;
 };
-//512, 448
-KageClone.game = new Phaser.Game(400, 224, Phaser.CANVAS, '', { preload: preload, create: create, update: update, render: render });
+//16:9 ---> 400 224
+KageClone.game = new Phaser.Game(640, 480, Phaser.CANVAS, '', { preload: preload, create: create, update: update, render: render });

@@ -9,14 +9,12 @@ NinjaPlayer = function NinjaPlayer(game, startPoint) {
     "use strict";
     //  We call the Phaser.Sprite passing in the game reference
     Phaser.Sprite.call(this, game, startPoint.x, startPoint.y, 'hayate');
-    //this.anchor.setTo(0.5, 1);
+    this.anchor.setTo(0.5, 1);
 
     game.physics.arcade.enable(this);
     //  player physics properties. Give the little guy a slight bounce.
-    this.body.bounce.y = WORLCONFIG.BOUNCE;
-    this.body.gravity.y = WORLCONFIG.GRAVITY;
-    this.body.collideWorldBounds = true;
     
+
     this.jump = 200;
     this.jumpMulti = 6;
     this.jumpX = 0;
@@ -28,7 +26,8 @@ NinjaPlayer = function NinjaPlayer(game, startPoint) {
     this.jumpTimer = KageClone.game.time.now;
     this.idleTimer = 0;
 
-    this.controlMode = 'state-based';
+    //this.controlMode = 'state-based';
+    this.controlMode = 'experimental';
 
     var old_anim = 'hayate_floor'
     this.switchTo = function( animation ){
@@ -128,8 +127,27 @@ NinjaPlayer = function NinjaPlayer(game, startPoint) {
     this.currentState = {};
 
     //this.body.maxVelocity.y = 800;
-    this.body.maxVelocity.x = Math.floor(this.speedX); //800
-    this.body.maxVelocity.y = Math.floor(WORLCONFIG.GRAVITY/3); //3333
+    if(this.controlMode !== 'experimental'){
+        this.body.maxVelocity.x = Math.floor(this.speedX); //800
+        this.body.maxVelocity.y = Math.floor(WORLCONFIG.GRAVITY/3); //3333
+        this.body.bounce.y = WORLCONFIG.BOUNCE;
+        this.body.gravity.y = WORLCONFIG.GRAVITY;
+    
+    } else {
+        this.spd = 60; // v sub x
+        this.jump_height_max = 64; // h.   3.5 blocks
+        this.jump_distance_max = 32; // (x sub h) * 2.   4.5 blocks
+        this.jump_distance_to_peak = this.jump_distance_max / 2; // x sub h
+        this.jump_time_to_peak = this.jump_distance_to_peak / this.spd; // t sub h (shouldn't be needed)
+        //this.jspd = (2 * this.jump_height_max * this.spd) / this.jump_time_to_peak; // v sub 0
+        this.jspd = (2*this.jump_height_max) / this.jump_time_to_peak;
+        this.grav = (2 * this.jump_height_max * Math.pow( this.spd, 2)) / Math.pow(this.jump_distance_to_peak, 2); // g.
+        this.frictionX = 0.7;
+        this.airFrictionX = 0.8;
+        this.body.gravity.y = this.grav;
+    }
+    
+    this.body.collideWorldBounds = true;
 
     //this = this;
     this.currentWeapon = {
@@ -169,6 +187,91 @@ NinjaPlayer.prototype.update = function() {
     */
 
     switch(this.controlMode) {
+        case 'experimental':
+            // Apply friction
+            this.body.velocity.x = this.body.velocity.x * this.frictionX;
+            // Check if is on the ground/air
+            this.inTheFloor   = this.body.touching.down || this.body.blocked.down;
+            this.forms.medium = this.inTheFloor ? 'ground' : 'aereal';
+
+            var preseedLeft   = cursors.left.isDown;
+            var preseedRight  = cursors.right.isDown;
+            var pressedJump   = cursors.up.isDown || cursors.s.isDown;
+            var pressedAttack = cursors.d.isDown;
+
+            // CASE 1: FACING ANIMATION (LEFT/RIGHT)
+            if( preseedRight  ){
+                this.scale.setTo(1,1);
+            } else if(preseedLeft) {
+                this.scale.setTo(-1,1);
+            } else {
+                this.forms.action = 'still';
+                this.body.setSize(32, 32, 0, 0);
+            }
+
+            // CASE 2: MOVEMENT (MOVEMENT/STILL) (Logical XOR)
+            if( ( preseedLeft || preseedRight ) && !( preseedLeft && preseedRight ) ){
+                    this.forms.action = 'movin';
+                    this.animationStateHandler();
+                if(!pressedAttack){ // Presset attack (CASE 4) will handle if is true
+                    //this.body.setSize(24, 32, 0, 0);
+                    if(this.inTheFloor){ // Ground control
+                        //this.body.velocity.x += this.scale.x * this.speedX/2;
+                        this.body.velocity.x += this.scale.x * this.spd;
+                    } else { // Air control (air friction)
+                        //this.body.velocity.x += this.scale.x * this.speedX * 0.8;
+                        this.body.velocity.x += this.scale.x * this.spd * this.airFrictionX;
+                    }
+                }
+            }
+
+            // CASE 3: JUMP
+            if( pressedJump ){
+                if(this.inTheFloor){
+                    // Initial jump boost from the ground
+                    this.body.velocity.y -= this.jspd;
+                    //this.jumpX = parseInt(this.jump_time_to_peak, 10);
+                } else {
+                    this.animationStateHandler();
+                    // Continue pressing (modular jump by boost) in the air
+                    /*
+                    this.body.velocity.y -= this.spd * this.jumpX;
+                    if (this.jumpX > 0.1) {
+                        this.jumpX *= 0.95;
+                    } else {
+                        this.jumpX = 0;
+                        this.animationStateHandler();
+                    }
+                    */
+                }
+            }
+
+            if( pressedAttack && !this.isPerformingAttack){
+                this.forms.mode = 'attack';
+                this.animationStateHandler();
+                
+                if(!this.isPerformingAttack && this.inTheFloor){
+                    if( ( preseedLeft || preseedRight ) && !( preseedLeft && preseedRight ) ){
+                        // des-accelerate
+                        this.body.velocity.x = this.body.velocity.x * this.frictionX;
+                    }
+                    //this.isPerformingAttack = true;
+                    this.attackTimer     = KageClone.game.time.now;
+                }
+                if(!this.isPerformingAttack && !this.inTheFloor){
+                    // des-accelerate
+                    this.body.velocity.x = this.body.velocity.x * this.airFrictionX;
+                    //this.body.velocity.y -= this.speedX/10; // go downwards(?) a little bit
+                    //this.isPerformingAttack = true;
+                }
+
+            } else {
+                this.forms.mode = 'calmed';
+                this.animationStateHandler();
+            }
+
+
+            break;
         case 'state-based':
 
             // Apply friction
