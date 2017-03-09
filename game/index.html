@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>Kage Clone</title>
+		<script type="text/javascript" src="assets/vendors/phaser.min.js"></script>
+		<script type="text/javascript" src="assets/vendors/jquery-2.2.3.min.js"></script>
+	</head>
+	<body>
+
+		<div id="content" style="float: left;"></div>
+
+		<script type="text/javascript" src="assets/js/player.js"></script>
+		<script type="text/javascript" src="assets/js/pause-menu.js"></script>
+		<script type="text/javascript" src="assets/js/hud.js"></script>
+		<script type="text/javascript" src="assets/js/index.js"></script>
+
+		<script type="text/javascript">
+			var versionNum;
+			if(KageClone){
+				versionNum = KageClone.getVersion();
+			} else {
+				versionNum = "0.0.1";
+			}
+			document.title = "Kage Clone "+"v. "+versionNum;
+		</script>
+
+	</body>
+</html>
