@@ -7,36 +7,17 @@
  */
 NinjaPlayer = function NinjaPlayer(game, startPoint) {
     "use strict";
-    //  We call the Phaser.Sprite passing in the game reference
+    // We call the Phaser.Sprite passing in the game reference
     Phaser.Sprite.call(this, game, startPoint.x, startPoint.y, 'hayate');
+    // Center the anchor at the half of the sprite
     this.anchor.setTo(0.5, 1);
-
+    // Physics enabled
     game.physics.arcade.enable(this);
-    //  player physics properties. Give the little guy a slight bounce.
-    
-
-    this.jump = 200;
-    this.jumpMulti = 6;
-    this.jumpX = 0;
-    this.speedX = 400;
-    this.speedStart = Math.floor( ( this.speedX - (this.speedX/10) ) / 2 );
-    this.inTheFloor = false;
-    this.frictionX = 0.7;
-    this.jumpCount = 0;
-    this.jumpTimer = KageClone.game.time.now;
-    this.idleTimer = 0;
-
-    //this.controlMode = 'state-based';
+    // Modes of control
     this.controlMode = 'experimental';
+    //this.controlMode = 'state-based';
 
-    var old_anim = 'hayate_floor'
-    this.switchTo = function( animation ){
-        if(animation != old_anim){
-            this.loadTexture(animation, 0);
-            old_anim = animation;
-        }
-    }
-
+    /** Will change current texture */
     var cached_sprite = '';
     this.switchSprite = function( newSprite ){
         if(newSprite != cached_sprite){
@@ -46,21 +27,26 @@ NinjaPlayer = function NinjaPlayer(game, startPoint) {
         return this;
     };
 
+    /** Will update the forms.result with all the states of the player */
     this.updateForm = function( separator ){
         var z = separator || '-';
-        this.forms.result = this.forms.char + z + this.forms.action + z + this.forms.medium + z + this.forms.mode;
+        this.forms.result = this.forms.character + z + this.forms.action + z + this.forms.medium + z + this.forms.mode;
         return this;
     };
 
+    // Register animations
+    registerAnimations( this );
 
+    /*
     var animationQueue = [];
     var cached_state = '';
-    this.animationStateHandler = function( newAnim, wait ){
+    this.animationStateHandler = function( wait, newAnim ){
         this.updateForm();
         var anim = newAnim || this.forms.result; // idle-long ; falling ;
         var t = KageClone.game.time.now;
+
         if(cached_state !== anim){
-            //console.log('@'+t+' for: '+anim);
+            console.log('@'+t+' for: '+anim);
         }
         
         if(animationQueue.length === 0 && !wait){
@@ -71,6 +57,7 @@ NinjaPlayer = function NinjaPlayer(game, startPoint) {
                 this.animations.play( 'ninja-'+anim );
                 //play(name, frameRate, loop, killOnComplete)
                 //(name, frames, frameRate, loop, useNumericIndex) ???
+
                 // 3- Update cache_state
                 cached_state = this.forms.result;
             }
@@ -94,68 +81,73 @@ NinjaPlayer = function NinjaPlayer(game, startPoint) {
         //player.events.onAnimationComplete.add(function(){         console.log("complete")     }, this);
         /// sprite.animations.currentAnim.name returns the name of the current animation
     };
+    */
+    var cached_anim_name = '';
+    this.hold = false;
+    this.animationStateHandler = function( wait, newAnim ){
+        this.updateForm();
+        var anim = newAnim || this.forms.result; // idle-long ; falling ;
+        var t = KageClone.game.time.now;
 
-    // New state-based-animations
-    this.animations.add('ninja-hayate-movin-aereal-attack', [1,2,3], 8, true);
-    this.animations.add('ninja-hayate-movin-aereal-calmed', [0], 8, true);
-    this.animations.add('ninja-hayate-movin-ground-attack', [1,2,3], 8, true);
-    this.animations.add('ninja-hayate-movin-ground-calmed', [0,1,2,3], 8, true);
-    this.animations.add('ninja-hayate-still-aereal-attack', [1,2,3], 8, true);
-    this.animations.add('ninja-hayate-still-aereal-calmed', [0], 8, true);
-    this.animations.add('ninja-hayate-still-ground-attack', [1,2,3], 8, true);
-    this.animations.add('ninja-hayate-still-ground-calmed', [0], 8, true);
-    // Specials
-    this.animations.add('ninja-hayate-special-idle', [0], 8, true);
-    //this.animations.add('ninja-hayate-special-falling', [0], 8, true);
-    this.animations.add('ninja-hayate-special-die', [0], 8, true);
-
-    var count  = 0;
-    var output = function(msg, separate) {
-        count = count + (separate ? 1 : 0);
-        document.getElementById('output').value = document.getElementById('output').value+ count + ": " + msg + "\n" + (separate ? "\n" : "");
-    }
-
-    this.forms = {
-        char      : "hayate",  // hayate (kaede, tommy)
-        direction : "",      // left   ||  right
-        action    : "",      // still  ||  movin
-        medium    : "",      // ground ||  aereal
-        mode      : "",      // calmed ||  attack
+        if(cached_anim_name !== anim){
+            //console.log('@'+t+' for: '+anim);
+        }
+        
+        if(!this.hold){
+            if(cached_anim_name !== anim){
+                // 1- Load new texture
+                this.switchSprite( anim );
+                // 2- Kick the animation
+                if(wait && !this.hold){
+                    this.hold = true;
+                    // Blocking animation
+                    this
+                        .animations.play( 'ninja-'+anim, null, false, false )
+                        .onComplete.add(function () {
+                            this.hold = false;
+                            //console.log('@'+t+' animation complete');
+                        }, this);
+                    //play(name, frameRate, loop, killOnComplete)
+                } else {
+                    // standard non-blocking animation
+                    this.animations.play( 'ninja-'+anim );
+                }
+                // 3- Update cache_state
+                cached_anim_name = this.forms.result;
+            }
+        }
+        //sprite.animations.currentAnim.onComplete.add(function () {  console.log('animation complete');}, this);
+        //player.events.onAnimationComplete.add(function(){         console.log("complete")     }, this);
+        /// sprite.animations.currentAnim.name returns the name of the current animation
     };
 
-    // legacy (needed by experimental control)
-    this.currentState = {};
-
-    //this.body.maxVelocity.y = 800;
-    if(this.controlMode !== 'experimental'){
-        this.body.maxVelocity.x = Math.floor(this.speedX); //800
-        this.body.maxVelocity.y = Math.floor(WORLCONFIG.GRAVITY/3); //3333
-        this.body.bounce.y = WORLCONFIG.BOUNCE;
-        this.body.gravity.y = WORLCONFIG.GRAVITY;
-    
-    } else {
-        this.spd = 60; // v sub x
-        this.jump_height_max = 64; // h.   3.5 blocks
-        this.jump_distance_max = 32; // (x sub h) * 2.   4.5 blocks
-        this.jump_distance_to_peak = this.jump_distance_max / 2; // x sub h
-        this.jump_time_to_peak = this.jump_distance_to_peak / this.spd; // t sub h (shouldn't be needed)
-        //this.jspd = (2 * this.jump_height_max * this.spd) / this.jump_time_to_peak; // v sub 0
-        this.jspd = (2*this.jump_height_max) / this.jump_time_to_peak;
-        this.grav = (2 * this.jump_height_max * Math.pow( this.spd, 2)) / Math.pow(this.jump_distance_to_peak, 2); // g.
-        this.frictionX = 0.7;
-        this.airFrictionX = 0.8;
-        this.body.gravity.y = this.grav;
-    }
-    
-    this.body.collideWorldBounds = true;
-
-    //this = this;
+    // Will hold the state of the current player ie: 'hayate-still-aerial-attack'
+    this.forms = {
+        character : "hayate",  // hayate || kaede
+        direction : "",        // left   || right
+        action    : "",        // still  || movin
+        medium    : "",        // ground || aereal || crouch
+        mode      : ""         // calmed || attack
+    };
+    // Will hold the current weapon name
     this.currentWeapon = {
         display : 'BareHanded'
     }
-    //this.body.setSize(76, 96, 0, 0);
+
+    // Physics properties of the player
+    this.spd                     = 60; // v sub x
+    this.jump_height_max         = 64; // h.   3.5 blocks
+    this.jump_distance_max       = 32; // (x sub h) * 2.   4.5 blocks
+    this.jump_distance_to_peak   = this.jump_distance_max / 2; // x sub h
+    this.jump_time_to_peak       = this.jump_distance_to_peak / this.spd; // t sub h (shouldn't be needed)
+    this.jspd                    = (2*this.jump_height_max) / this.jump_time_to_peak;
+    this.grav                    = (2 * this.jump_height_max * Math.pow( this.spd, 2)) / Math.pow(this.jump_distance_to_peak, 2); // g.
+    this.frictionX               = 0.7;
+    this.airFrictionX            = 0.8;
+    this.body.gravity.y          = this.grav;
+    this.body.collideWorldBounds = true;
+    // Physics body size
     this.body.setSize(48, 48, 0, 0);
-    //this.body.setSize(40, 80, 20, 15);
     // Finally add the sprite to the game
     game.add.existing(this);
 
@@ -163,246 +155,94 @@ NinjaPlayer = function NinjaPlayer(game, startPoint) {
     window.recordy = 0;
 };
 
+// Inherit from Sprite
 NinjaPlayer.prototype = Object.create(Phaser.Sprite.prototype);
 NinjaPlayer.prototype.constructor = NinjaPlayer;
 
-    var lastPressed = {
-        dir : "",
-        int : 0
-    };
-    var jumpUnlock = false;
+var lock = false;
 
 //  Automatically called by World.update
 NinjaPlayer.prototype.update = function() {
     "use strict";
     //  Collide the this with the platforms
     KageClone.game.physics.arcade.collide(this, KageClone.game.blockedLayer);
-    // set the value once 
-    //
-    /*
-    if(this.body.height !== 32){
-        console.log('once!')
-        this.body.setSize(32, 32, 0, 0);
-    }
-    */
+    // Apply friction
+    this.body.velocity.x = this.body.velocity.x * this.frictionX;
+    // Check if is on the ground/air
+    this.inTheFloor   = this.body.touching.down || this.body.blocked.down;
+    this.forms.medium = this.inTheFloor ? 'ground' : 'aereal';
+    // Check what is pressed
+    var preseedLeft    = cursors.left.isDown;
+    var preseedRight   = cursors.right.isDown;
+    var pressedJump    = cursors.up.isDown || cursors.s.isDown;
+    var pressedCrouch  = cursors.down.isDown;
+    var pressedAttack  = cursors.d.isDown;
+    var releasedAttack = cursors.d.isUp;
 
     switch(this.controlMode) {
         case 'experimental':
-            // Apply friction
-            this.body.velocity.x = this.body.velocity.x * this.frictionX;
-            // Check if is on the ground/air
-            this.inTheFloor   = this.body.touching.down || this.body.blocked.down;
-            this.forms.medium = this.inTheFloor ? 'ground' : 'aereal';
 
-            var preseedLeft   = cursors.left.isDown;
-            var preseedRight  = cursors.right.isDown;
-            var pressedJump   = cursors.up.isDown || cursors.s.isDown;
-            var pressedAttack = cursors.d.isDown;
-
-            // CASE 1: FACING ANIMATION (LEFT/RIGHT)
-            if( preseedRight  ){
-                this.scale.setTo(1,1);
-            } else if(preseedLeft) {
-                this.scale.setTo(-1,1);
-            } else {
-                this.forms.action = 'still';
-                this.body.setSize(32, 32, 0, 0);
-            }
-
-            // CASE 2: MOVEMENT (MOVEMENT/STILL) (Logical XOR)
-            if( ( preseedLeft || preseedRight ) && !( preseedLeft && preseedRight ) ){
-                    this.forms.action = 'movin';
-                    this.animationStateHandler();
-                if(!pressedAttack){ // Presset attack (CASE 4) will handle if is true
-                    //this.body.setSize(24, 32, 0, 0);
-                    if(this.inTheFloor){ // Ground control
-                        //this.body.velocity.x += this.scale.x * this.speedX/2;
-                        this.body.velocity.x += this.scale.x * this.spd;
-                    } else { // Air control (air friction)
-                        //this.body.velocity.x += this.scale.x * this.speedX * 0.8;
-                        this.body.velocity.x += this.scale.x * this.spd * this.airFrictionX;
-                    }
+            // STEP 1: FACING ANIMATION (LEFT/RIGHT)
+            if(!this.isPerformingAttack){
+                if( preseedRight ){
+                    this.scale.setTo(1,1);
+                } else if( preseedLeft ) {
+                    this.scale.setTo(-1,1);
+                } else {
+                    this.forms.action = 'still';
+                    this.body.setSize(32, 32, 0, 0);
                 }
             }
-
-            // CASE 3: JUMP
-            if( pressedJump ){
+            // STEP 2: CROUCH STATE
+            if( pressedCrouch ){
+                this.forms.action = 'still';
+                this.forms.medium = 'crouch';
+            }
+            // STEP 3: MOVEMENT (MOVEMENT/STILL) (Logical XOR)
+            if( ( preseedLeft || preseedRight ) && !( preseedLeft && preseedRight ) && !pressedCrouch ){
+                //this.body.setSize(24, 32, 0, 0);
+                if(this.inTheFloor){ // Ground control
+                    if(!this.isPerformingAttack){
+                        this.body.velocity.x += this.scale.x * this.spd;
+                    }
+                } else { // Air control (air friction)
+                    this.body.velocity.x += this.scale.x * this.spd * this.airFrictionX;
+                }
+                this.forms.action = 'movin';
+                this.animationStateHandler();
+            }
+            // STEP 4: JUMP
+            if( pressedJump && !pressedCrouch ){
                 if(this.inTheFloor){
-                    // Initial jump boost from the ground
                     this.body.velocity.y -= this.jspd;
-                    //this.jumpX = parseInt(this.jump_time_to_peak, 10);
                 } else {
                     this.animationStateHandler();
-                    // Continue pressing (modular jump by boost) in the air
-                    /*
-                    this.body.velocity.y -= this.spd * this.jumpX;
-                    if (this.jumpX > 0.1) {
-                        this.jumpX *= 0.95;
-                    } else {
-                        this.jumpX = 0;
-                        this.animationStateHandler();
-                    }
-                    */
                 }
             }
-
+            // STEP 5: ATTACK
             if( pressedAttack && !this.isPerformingAttack){
                 this.forms.mode = 'attack';
-                this.animationStateHandler();
-                
+                this.animationStateHandler(true);
+
                 if(!this.isPerformingAttack && this.inTheFloor){
                     if( ( preseedLeft || preseedRight ) && !( preseedLeft && preseedRight ) ){
-                        // des-accelerate
-                        this.body.velocity.x = this.body.velocity.x * this.frictionX;
+                        this.body.velocity.x = this.body.velocity.x * this.frictionX; // des-accelerate
                     }
-                    //this.isPerformingAttack = true;
-                    this.attackTimer     = KageClone.game.time.now;
+                    this.attackTimer        = KageClone.game.time.now;
+                    this.isPerformingAttack = true;
                 }
                 if(!this.isPerformingAttack && !this.inTheFloor){
-                    // des-accelerate
-                    this.body.velocity.x = this.body.velocity.x * this.airFrictionX;
-                    //this.body.velocity.y -= this.speedX/10; // go downwards(?) a little bit
-                    //this.isPerformingAttack = true;
+                    this.body.velocity.x = this.body.velocity.x * this.airFrictionX; // des-accelerate
+                    this.isPerformingAttack = true;
                 }
-
             } else {
                 this.forms.mode = 'calmed';
                 this.animationStateHandler();
             }
-
-
-            break;
-        case 'state-based':
-
-            // Apply friction
-            this.body.velocity.x = this.body.velocity.x * this.frictionX;
-            // Check if is on the ground/air
-            this.inTheFloor   = this.body.touching.down || this.body.blocked.down;
-            this.forms.medium = this.inTheFloor ? 'ground' : 'aereal';
-
-            var preseedLeft   = cursors.left.isDown;
-            var preseedRight  = cursors.right.isDown;
-            var pressedJump   = cursors.up.isDown || cursors.s.isDown;
-            var pressedAttack = cursors.d.isDown;
-
-            // CASE 1: FACING ANIMATION (LEFT/RIGHT)
-            if( preseedRight  ){
-                this.scale.setTo(1,1);
-            } else if(preseedLeft) {
-                this.scale.setTo(-1,1);
-            } else {
-                this.forms.action = 'still';
-                this.body.setSize(32, 32, 0, 0);
+            // STEP 6: UNLOCK THE ATTACK BUTTON // (KageClone.game.time.now - this.attackTimer > 600)
+            if( (this.isPerformingAttack && releasedAttack) ){
+                this.isPerformingAttack = false;
             }
-
-            // CASE 2: MOVEMENT (MOVEMENT/STILL) (Logical XOR)
-            if( ( preseedLeft || preseedRight ) && !( preseedLeft && preseedRight ) ){
-                    this.forms.action = 'movin';
-                    this.animationStateHandler();
-                if(!pressedAttack){ // Presset attack (CASE 4) will handle if is true
-                    this.body.setSize(24, 32, 0, 0);
-                    if(this.inTheFloor){ // Ground control
-                        this.body.velocity.x += this.scale.x * this.speedX/2;
-                    } else { // Air control (air friction)
-                        this.body.velocity.x += this.scale.x * this.speedX * 0.8;
-                    }
-                }
-            }
-
-            // CASE 3: JUMP
-            if( pressedJump ){
-                if(this.inTheFloor){
-                    // Initial jump boost from the ground
-                    this.body.velocity.y -= this.jump/1.8 * this.jumpMulti;
-                    this.jumpX = 0.9;
-                } else {
-                    this.animationStateHandler();
-                    // Continue pressing (modular jump by boost) in the air
-                    this.body.velocity.y -= this.jump/1.8 * this.jumpX;
-                    if (this.jumpX > 0.1) {
-                        this.jumpX *= 0.95;
-                    } else {
-                        this.jumpX = 0;
-                        this.animationStateHandler();
-                    }
-                }
-            }
-
-            // CASE 4: MODE (ATTACK/NORMAL)
-            if( pressedAttack && !this.isPunching && !this.isKicking){
-                this.forms.mode = 'attack';
-                this.animationStateHandler();
-
-                if(!this.isKicking && !this.isPunching && this.inTheFloor){
-                    if( ( preseedLeft || preseedRight ) && !( preseedLeft && preseedRight ) ){
-                        // 50% of speed
-                        this.body.velocity.x += this.scale.x * this.speedX/2 * 0.5;
-                    }
-                    // punching only allowed on the floor
-                    this.punchX          = 400;
-                    this.isPunching      = true;
-                    this.attackTimer     = KageClone.game.time.now;
-                }
-                if(!this.isPunching && !this.isKicking && !this.inTheFloor){
-                    // kicking only allowed on air
-                    this.body.velocity.x += this.scale.x * this.speedX/3;
-                    this.body.velocity.y -= this.speedX/10; // go downwards(?) a little bit
-                    this.kickX          = 1;
-                    this.isKicking      = true;
-                }
-            }
-
-            // CASE 4: AUTOMATICALLY COMPLETE THE PUNCH ATTACK
-            if(this.isPunching && !this.isKicking){
-                if (KageClone.game.time.now - this.attackTimer < this.punchX) {
-                    if( ( preseedLeft || preseedRight ) && !( preseedLeft && preseedRight ) ){
-                        // 20% of speed
-                        this.body.velocity.x += this.scale.x * this.speedX/2 * 0.2;
-                    }
-                } else {
-                    this.isPunching = false;
-                    this.forms.mode = 'calmed';
-                    this.animationStateHandler();
-                }
-            }
-
-            // CASE 4: AUTOMATICALLY COMPLETE THE KICK ATTACK
-            if(this.isKicking && !this.isPunching){
-                this.body.velocity.x += this.scale.x * this.speedX/7 * this.kickX;
-                if (this.kickX > 0.1) {
-                    this.kickX *= 0.95;
-                } else {
-                    this.kickX      = 0;
-                    this.isKicking  = false;
-                    this.forms.mode = 'calmed';
-                    this.animationStateHandler();
-                }
-            }
-
-            // CASE 5: DOING NOTHING (ELSE)
-            if( !preseedLeft && !preseedRight && !pressedJump && !pressedAttack ){
-                if(this.forms.result !== "good-still-ground-calmed"){
-                    this.forms.mode   = 'calmed';
-                    this.forms.action = 'still';
-                    this.animationStateHandler();
-                }
-                if(this.idleTimer === 0){
-                    this.idleTimer = KageClone.game.time.now;
-                } else if( KageClone.game.time.now - this.idleTimer > 3000) {
-                    //this.animationStateHandler('good-special-idle');
-                } else {
-                    if(this.inTheFloor){
-                        // Completely still
-                        //this.frame = 0;
-                        this.animations.stop();
-                    } else {
-                        // Freefall
-                    }
-                }
-            }
-
-            // Updates the spritesheet name
-            this.updateForm();
 
             break;
         default:
@@ -411,4 +251,21 @@ NinjaPlayer.prototype.update = function() {
 
     if( this.body.velocity.x > window.recordx) { window.recordx = this.body.velocity.x };
     if( this.body.velocity.y > window.recordy) { window.recordy = this.body.velocity.y };
+};
+
+var registerAnimations = function( player ){
+    // New state-based-animations
+    player.animations.add('ninja-hayate-movin-aereal-attack', [1,2,3], 8, true)
+    player.animations.add('ninja-hayate-movin-aereal-calmed', [0], 1, false);
+    player.animations.add('ninja-hayate-movin-ground-attack', [1,2,3], 8, true)
+    player.animations.add('ninja-hayate-movin-ground-calmed', [1,2,3,4], 8, true);
+    player.animations.add('ninja-hayate-still-aereal-attack', [1,2,3], 8, true);
+    player.animations.add('ninja-hayate-still-aereal-calmed', [0], 1, false);
+    player.animations.add('ninja-hayate-still-ground-attack', [1,2,3], 8, true)
+    player.animations.add('ninja-hayate-still-ground-calmed', [0], 1, false);
+    player.animations.add('ninja-hayate-still-crouch-calmed', [0], 1, false);
+    player.animations.add('ninja-hayate-still-crouch-attack', [1,2,3], 8, true)
+    // Specials
+    player.animations.add('ninja-hayate-special-idle', [0], 8, true);
+    player.animations.add('ninja-hayate-special-die', [0], 8, true);
 };
