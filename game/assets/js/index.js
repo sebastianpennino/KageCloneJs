@@ -1,7 +1,7 @@
 var Phaser  = Phaser  || {};
 var KageClone = KageClone || {};
 KageClone.version = "0.0.1a";
-KageClone.shouldDebug = true;
+KageClone.shouldDebug = false;
 KageClone.getVersion = function () {
     "use strict";
     return this.version;
@@ -25,21 +25,19 @@ function preload() {
     KageClone.game.load.image('hpx', 'assets/images/health_pixel.jpg');
 
 
+    KageClone.game.load.atlas('hayate', 'assets/images/hayate/hayate.png', 'assets/images/hayate/hayate_hash.json',Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
 
-    KageClone.game.load.spritesheet('hayate', 'assets/images/hayate/hayate-run.png', 32, 32);
-    KageClone.game.load.spritesheet('hayate-movin-aereal-attack', 'assets/images/hayate/hayate-air.png', 32, 32);
-    KageClone.game.load.spritesheet('hayate-movin-aereal-calmed', 'assets/images/hayate/hayate-air.png', 32, 32);
-    KageClone.game.load.spritesheet('hayate-movin-ground-attack', 'assets/images/hayate/hayate-attack.png', 32, 32);
-    KageClone.game.load.spritesheet('hayate-movin-ground-calmed', 'assets/images/hayate/hayate-run.png', 32, 32);
-    KageClone.game.load.spritesheet('hayate-still-aereal-attack', 'assets/images/hayate/hayate-air.png', 32, 32);
-    KageClone.game.load.spritesheet('hayate-still-aereal-calmed', 'assets/images/hayate/hayate-air.png', 32, 32);
-    KageClone.game.load.spritesheet('hayate-still-ground-attack', 'assets/images/hayate/hayate-attack.png', 32, 32);
-    KageClone.game.load.spritesheet('hayate-still-ground-calmed', 'assets/images/hayate/hayate-attack.png', 32, 32);
-    KageClone.game.load.spritesheet('hayate-still-crouch-calmed', 'assets/images/hayate/hayate_duck_attack.png',32, 32);
-    KageClone.game.load.spritesheet('hayate-still-crouch-attack', 'assets/images/hayate/hayate_duck_attack.png',32, 32);
-    KageClone.game.load.spritesheet('hayate-movin-crouch-calmed', 'assets/images/hayate/hayate_duck_attack.png',32, 32);
-    KageClone.game.load.spritesheet('hayate-movin-crouch-attack', 'assets/images/hayate/hayate_duck_attack.png',32, 32);
-
+//KageClone.game.load.spritesheet('hayate', 'assets/images/hayate/hayate-run.png', 24, 32);
+/*
+KageClone.game.load.spritesheet('hayate-movin-aereal-attack', 'assets/images/hayate/hayate-air.png', 24, 32);
+KageClone.game.load.spritesheet('hayate-movin-aereal-calmed', 'assets/images/hayate/hayate-air.png', 32, 32);
+KageClone.game.load.spritesheet('hayate-movin-ground-attack', 'assets/images/hayate/hayate-attack.png', 32, 32);
+KageClone.game.load.spritesheet('hayate-movin-ground-calmed', 'assets/images/hayate/hayate-run.png', 24, 32);
+KageClone.game.load.spritesheet('hayate-still-aereal-attack', 'assets/images/hayate/hayate-air.png', 32, 32);
+KageClone.game.load.spritesheet('hayate-still-aereal-calmed', 'assets/images/hayate/hayate-air.png', 32, 32);
+KageClone.game.load.spritesheet('hayate-still-ground-attack', 'assets/images/hayate/hayate-attack.png', 32, 32);
+KageClone.game.load.spritesheet('hayate-still-ground-calmed', 'assets/images/hayate/hayate-attack.png', 32, 32);
+*/
 };
 
 var ninja, cursors;
@@ -51,7 +49,7 @@ function create() {
     KageClone.game.physics.arcade.TILE_BIAS = 40;
     //KageClone.game.world.setBounds(0, 0, 3000, 300);
     KageClone.game.stage.backgroundColor = '#337799';
-    var startLoc = new Phaser.Point(320, 2400);
+    var startLoc = new Phaser.Point(320, 540);  // was 320, 2400
     ninja = new NinjaPlayer( KageClone.game, startLoc );
     window.ninja = ninja;
     // The score
@@ -93,12 +91,12 @@ function create() {
     KageClone.game.time.desiredFps = 60;
 
     // Stretch to fill
-    // KageClone.game.scale.fullScreenScaleMode = Phaser.ScaleManager.EXACT_FIT;
+     KageClone.game.scale.fullScreenScaleMode = Phaser.ScaleManager.EXACT_FIT;
     // Keep original size
     // KageClone.game.scale.fullScreenScaleMode = Phaser.ScaleManager.NO_SCALE;
     // Maintain aspect ratio
     KageClone.game.scale.fullScreenScaleMode = Phaser.ScaleManager.SHOW_ALL;
-    KageClone.game.input.onDown.add(goFullScreen, this);
+    //KageClone.game.input.onDown.add(goFullScreen, this);
 };
 
 function hitDestroy(sprite, tile) {
@@ -193,7 +191,7 @@ function render() {
         KageClone.game.debug.text('(O) to toggle debug (needs movement for the bounding boxes to appear)', xoffset, 84, myFont.color, myFont.desc);
     } else{ 
         //KageClone.game.debug.cameraInfo(KageClone.game.camera, 32, 160);
-        KageClone.game.debug.text('Player state: '+ninja.forms.result, xoffset, 12, myFont.color, myFont.desc);
+        //KageClone.game.debug.text('Player state: '+ninja.forms.result, xoffset, 12, myFont.color, myFont.desc);
         KageClone.game.debug.bodyInfo(ninja, xoffset, 22);
         //KageClone.game.debug.text('Weapon: '+ninja.currentWeapon.display, xoffset, 544);
         KageClone.game.debug.text('render FPS: ' + (KageClone.game.time.fps || '--') , 325, 14, "#00ff00");
@@ -218,5 +216,5 @@ function toggleDebug() {
     "use strict";
     KageClone.shouldDebug = !KageClone.shouldDebug;
 };
-//16:9 ---> 400 224
+// NES 16:9 ---> 426 x 240  (Original NES Resolution was 256 x 240)
 KageClone.game = new Phaser.Game(640, 480, Phaser.CANVAS, '', { preload: preload, create: create, update: update, render: render });
