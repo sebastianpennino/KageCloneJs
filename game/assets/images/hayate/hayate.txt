@@ -1,0 +1,16 @@
+ground_still,0,0,32,32
+ground_run_1,32,0,32,32
+ground_run_2,64,0,32,32
+ground_run_3,96,0,32,32
+duck_still,0,32,32,32
+duck_at_1,32,32,32,32
+duck_at_2,64,32,32,32
+duck_at_3,96,32,32,32
+jump,0,64,32,32
+jump_at_1,32,64,32,32
+jump_at_2,64,64,32,32
+jump_at_3,96,64,32,32
+ground_still_b,0,96,32,32
+ground_at_1,32,96,32,32
+ground_at_2,64,96,32,32
+ground_at_3,96,96,32,32
