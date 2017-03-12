@@ -1,17 +1,14 @@
 var Phaser  = Phaser  || {};
 var KageClone = KageClone || {};
-KageClone.version = "0.0.1a";
-KageClone.shouldDebug = false;
+KageClone.version = "0.0.2a";
+KageClone.shouldDebug = true;
 KageClone.getVersion = function () {
     "use strict";
     return this.version;
 };
 
-// GLOBAL CONSTANT
-var WORLCONFIG = {
-    GRAVITY : 5000,
-    BOUNCE : 0.1
-};
+// Will store some public vars for debugging
+var dbug = {}
 
 function preload() {
     "use strict";
@@ -20,24 +17,10 @@ function preload() {
     KageClone.game.load.image('pauseMenu', 'assets/images/pause_menu_back.jpg');
     KageClone.game.load.image('selectMenu', 'assets/images/pause_menu_select.png');
     KageClone.game.load.image('blackout', 'assets/images/black.png');
-
     KageClone.game.load.image('hudback', 'assets/images/hud_bkg.png');
     KageClone.game.load.image('hpx', 'assets/images/health_pixel.jpg');
-
-
+    // Hayate Atlas
     KageClone.game.load.atlas('hayate', 'assets/images/hayate/hayate.png', 'assets/images/hayate/hayate_hash.json',Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
-
-//KageClone.game.load.spritesheet('hayate', 'assets/images/hayate/hayate-run.png', 24, 32);
-/*
-KageClone.game.load.spritesheet('hayate-movin-aereal-attack', 'assets/images/hayate/hayate-air.png', 24, 32);
-KageClone.game.load.spritesheet('hayate-movin-aereal-calmed', 'assets/images/hayate/hayate-air.png', 32, 32);
-KageClone.game.load.spritesheet('hayate-movin-ground-attack', 'assets/images/hayate/hayate-attack.png', 32, 32);
-KageClone.game.load.spritesheet('hayate-movin-ground-calmed', 'assets/images/hayate/hayate-run.png', 24, 32);
-KageClone.game.load.spritesheet('hayate-still-aereal-attack', 'assets/images/hayate/hayate-air.png', 32, 32);
-KageClone.game.load.spritesheet('hayate-still-aereal-calmed', 'assets/images/hayate/hayate-air.png', 32, 32);
-KageClone.game.load.spritesheet('hayate-still-ground-attack', 'assets/images/hayate/hayate-attack.png', 32, 32);
-KageClone.game.load.spritesheet('hayate-still-ground-calmed', 'assets/images/hayate/hayate-attack.png', 32, 32);
-*/
 };
 
 var ninja, cursors;
@@ -87,16 +70,16 @@ function create() {
     hud.setState(0);
 
     KageClone.game.time.advancedTiming = true;
-    //KageClone.game.time.slowMotion = 30;
     KageClone.game.time.desiredFps = 60;
+    //KageClone.game.time.slowMotion = 10;
 
     // Stretch to fill
-     KageClone.game.scale.fullScreenScaleMode = Phaser.ScaleManager.EXACT_FIT;
+    // KageClone.game.scale.fullScreenScaleMode = Phaser.ScaleManager.EXACT_FIT;
     // Keep original size
     // KageClone.game.scale.fullScreenScaleMode = Phaser.ScaleManager.NO_SCALE;
     // Maintain aspect ratio
     KageClone.game.scale.fullScreenScaleMode = Phaser.ScaleManager.SHOW_ALL;
-    //KageClone.game.input.onDown.add(goFullScreen, this);
+    KageClone.game.input.onDown.add(goFullScreen, this);
 };
 
 function hitDestroy(sprite, tile) {
@@ -191,7 +174,8 @@ function render() {
         KageClone.game.debug.text('(O) to toggle debug (needs movement for the bounding boxes to appear)', xoffset, 84, myFont.color, myFont.desc);
     } else{ 
         //KageClone.game.debug.cameraInfo(KageClone.game.camera, 32, 160);
-        //KageClone.game.debug.text('Player state: '+ninja.forms.result, xoffset, 12, myFont.color, myFont.desc);
+        //console.log(ninja)
+        KageClone.game.debug.text('FSM: '+dbug.state, xoffset, KageClone.game.camera.view.height/2, '#FF0000', '15px Arial');
         KageClone.game.debug.bodyInfo(ninja, xoffset, 22);
         //KageClone.game.debug.text('Weapon: '+ninja.currentWeapon.display, xoffset, 544);
         KageClone.game.debug.text('render FPS: ' + (KageClone.game.time.fps || '--') , 325, 14, "#00ff00");
@@ -216,5 +200,5 @@ function toggleDebug() {
     "use strict";
     KageClone.shouldDebug = !KageClone.shouldDebug;
 };
-// NES 16:9 ---> 426 x 240  (Original NES Resolution was 256 x 240)
-KageClone.game = new Phaser.Game(640, 480, Phaser.CANVAS, '', { preload: preload, create: create, update: update, render: render });
+// Dev 640 x 480 ||  NES 16:9 ---> 426 x 240  || Original NES Resolution ---> 256 x 240
+KageClone.game = new Phaser.Game(426, 240, Phaser.CANVAS, '', { preload: preload, create: create, update: update, render: render });
