@@ -1,7 +1,7 @@
 var Phaser  = Phaser  || {};
 var KageClone = KageClone || {};
 KageClone.version = "0.0.2a";
-KageClone.shouldDebug = true;
+KageClone.shouldDebug = false;
 KageClone.getVersion = function () {
     "use strict";
     return this.version;
@@ -12,8 +12,15 @@ var dbug = {}
 
 function preload() {
     "use strict";
-    KageClone.game.load.tilemap('initial-level', 'assets/levels/level4.json', null, Phaser.Tilemap.TILED_JSON);
-    KageClone.game.load.image('gameTiles', 'assets/images/32x32_tileset.jpg');
+    //KageClone.game.load.tilemap('initial-level', 'assets/levels/level_boat.json', null, Phaser.Tilemap.TILED_JSON);
+    KageClone.game.load.tilemap('initial-level', 'assets/levels/level_boat_v2.json', null, Phaser.Tilemap.TILED_JSON);
+    //KageClone.game.load.image('gameTiles', 'assets/images/32x32_tileset.jpg');
+    //KageClone.game.load.image('gameTiles', 'assets/images/tilesets/kage_level_1_8x8.jpg');
+    //KageClone.game.load.image('gameBkg', 'assets/images/tilesets/kage_level_1_16x16.jpg');
+    KageClone.game.load.image('8x8_blank', 'assets/images/tilesets/8x8_blank.png');
+    KageClone.game.load.image('plan', 'assets/images/kage_level_1_plan.png');
+
+
     KageClone.game.load.image('pauseMenu', 'assets/images/pause_menu_back.jpg');
     KageClone.game.load.image('selectMenu', 'assets/images/pause_menu_select.png');
     KageClone.game.load.image('blackout', 'assets/images/black.png');
@@ -25,14 +32,19 @@ function preload() {
 
 var ninja, cursors;
 var debugKey, pauseKey, pause_label, pause_legend;
+var backgroundGroup;
 
 function create() {
     "use strict";
     KageClone.game.physics.startSystem( Phaser.Physics.ARCADE );
-    KageClone.game.physics.arcade.TILE_BIAS = 40;
+    //KageClone.game.physics.arcade.TILE_BIAS = 40;
+
+    backgroundGroup = KageClone.game.add.group();
     //KageClone.game.world.setBounds(0, 0, 3000, 300);
-    KageClone.game.stage.backgroundColor = '#337799';
-    var startLoc = new Phaser.Point(320, 540);  // was 320, 2400
+    //KageClone.game.stage.backgroundColor = '#337799';
+    KageClone.game.stage.backgroundColor = '#CCCCCC';
+
+    var startLoc = new Phaser.Point(32, 32);  // was 320, 2400
     ninja = new NinjaPlayer( KageClone.game, startLoc );
     window.ninja = ninja;
     // The score
@@ -50,14 +62,25 @@ function create() {
 
     KageClone.game.map = KageClone.game.add.tilemap('initial-level');
     //the first parameter is the tileset name as specified in Tiled, the second is the key to the asset
-    KageClone.game.map.addTilesetImage('32x32_tileset', 'gameTiles');
+    //KageClone.game.map.addTilesetImage('32x32_tileset', 'gameTiles');
+    //KageClone.game.map.addTilesetImage('kage_level_1_8x8', 'gameTiles');
+    //KageClone.game.map.addTilesetImage('kage_level_1_16x16', 'gameBkg');
+    //// FUTURE PARALLAX http://www.html5gamedevs.com/topic/11025-parallax-background-with-tileset-image-layer/
+    KageClone.game.add.tileSprite(0, 0, 2176, 240, 'plan', null, backgroundGroup);
+    KageClone.game.map.addTilesetImage('8x8_blank', '8x8_blank');
+    //KageClone.game.map.addTilesetImage('plan', 'plan');
     //create layer
+    //KageClone.game.back = KageClone.game.map.createLayer('background');
     KageClone.game.blockedLayer = KageClone.game.map.createLayer('blockedLayer');
+    //KageClone.game.gameBkg = KageClone.game.map.createLayer('gameBkg');
+    KageClone.game.blockedLayer.scale.set(1);
+    //KageClone.game.gameBkg.scale.set(1);
     //collision on blockedLayer
     KageClone.game.map.setCollisionBetween(1, 2000, true, 'blockedLayer');
     //  This will set Tile ID 4 (red blocks) to call the hitDestroy function when collided with
     KageClone.game.map.setTileIndexCallback(4, hitDestroy, this);
     KageClone.game.blockedLayer.resizeWorld();
+    //KageClone.game.gameBkg.resizeWorld();
     // Added debug on pressing 'O'
     debugKey = KageClone.game.input.keyboard.addKey(Phaser.Keyboard.O);
     debugKey.onDown.add(toggleDebug);
@@ -202,3 +225,4 @@ function toggleDebug() {
 };
 // Dev 640 x 480 ||  NES 16:9 ---> 426 x 240  || Original NES Resolution ---> 256 x 240
 KageClone.game = new Phaser.Game(426, 240, Phaser.CANVAS, '', { preload: preload, create: create, update: update, render: render });
+
