@@ -31,17 +31,50 @@ var registerStates = function( player ){
                 //console.log('leaving neutral state! ' + msg); 
             },
             onenterjumping: function(event, from, to, player){
-                animations.play( 'ninja-hayate-movin-ground-attack', null, false, false )
+                //animations.play( 'ninja-hayate-movin-aereal-calmed', null, false, false )
+                animations.stop();
+                animations.frame = 9;
                 player.body.velocity.y -= player.jspd;
+            },
+            onenterfalling: function(event, from, to){
+                animations.stop();
+                animations.frame = 9;
             },
             onrunning: function(event, from, to, isInFloor){
                 //player.body.velocity.x += player.scale.x * player.spd;
                 animations.play('ninja-hayate-movin-ground-calmed');
             },
             onentergrnAttack: function(event, from, to){
+                console.log('groundAttack!')
+
                 // Play ground attack animation and WAIT TO FINISH IT
+                if(from === 'crouching'){
+                    /*
+                    animations
+                        .play( 'ninja-hayate-still-crouch-attack', null, false, false )
+                        .onComplete.add(function () {  
+                            console.log('animation complete, returning to calmness');
+                            player.sm.returnToCalmEvent();
+                            //player.sm.transition();
+                        }, player);
+                    */
+                    player.sm.returnToCalmEvent();
+                } else {
+                    animations
+                        .play( 'ninja-hayate-movin-ground-attack', null, false, false )
+                        .onComplete.add(function () {  
+                            console.log('animation complete, returning to calmness');
+                            player.sm.returnToCalmEvent();
+                            //player.sm.transition();
+                        }, player);
+                }
+                return StateMachine.ASYNC; // tell StateMachine to defer next state until we call transition (in slideUp callback above)
+            },
+            onenterairAttackEvent: function(event, from, to, player){
+                // Play air attack animation
+                // trigger transition
                 animations
-                    .play( 'ninja-hayate-movin-ground-attack', null, false, false )
+                    .play( 'ninja-hayate-movin-aereal-attack', null, false, false )
                     .onComplete.add(function () {  
                         console.log('animation complete, returning to calmness');
                         player.sm.returnToCalmEvent();
@@ -49,15 +82,9 @@ var registerStates = function( player ){
                     }, player);
                 return StateMachine.ASYNC; // tell StateMachine to defer next state until we call transition (in slideUp callback above)
             },
-            onenterairAttackEvent: function(event, from, to, player){
-                // Play air attack animation
-                // trigger transition
-                //fsm.transition();
-                return StateMachine.ASYNC; // tell StateMachine to defer next state until we call transition (in slideUp callback above)
-            },
             oncrouching: function(){
                 console.log('duck!')
-                animations.frame = 4;
+                animations.frame = 5;
             },
             /*
             onleavegame: function() {

@@ -1,7 +1,7 @@
 var Phaser  = Phaser  || {};
 var KageClone = KageClone || {};
 KageClone.version = "0.0.2a";
-KageClone.shouldDebug = false;
+KageClone.shouldDebug = true;
 KageClone.getVersion = function () {
     "use strict";
     return this.version;
@@ -40,6 +40,7 @@ function create() {
     //KageClone.game.physics.arcade.TILE_BIAS = 40;
 
     backgroundGroup = KageClone.game.add.group();
+
     //KageClone.game.world.setBounds(0, 0, 3000, 300);
     //KageClone.game.stage.backgroundColor = '#337799';
     KageClone.game.stage.backgroundColor = '#CCCCCC';
@@ -47,8 +48,6 @@ function create() {
     var startLoc = new Phaser.Point(32, 32);  // was 320, 2400
     ninja = new NinjaPlayer( KageClone.game, startLoc );
     window.ninja = ninja;
-    // The score
-    //scoreText = KageClone.game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#fff' });
     // Our controls
     cursors = KageClone.game.input.keyboard.createCursorKeys();
     cursors.s = KageClone.game.input.keyboard.addKey(Phaser.Keyboard.S);
@@ -66,12 +65,13 @@ function create() {
     //KageClone.game.map.addTilesetImage('kage_level_1_8x8', 'gameTiles');
     //KageClone.game.map.addTilesetImage('kage_level_1_16x16', 'gameBkg');
     //// FUTURE PARALLAX http://www.html5gamedevs.com/topic/11025-parallax-background-with-tileset-image-layer/
-    KageClone.game.add.tileSprite(0, 0, 2176, 240, 'plan', null, backgroundGroup);
+    KageClone.game.add.tileSprite(0, 2, 2176, 240, 'plan', null, backgroundGroup);
     KageClone.game.map.addTilesetImage('8x8_blank', '8x8_blank');
     //KageClone.game.map.addTilesetImage('plan', 'plan');
     //create layer
     //KageClone.game.back = KageClone.game.map.createLayer('background');
     KageClone.game.blockedLayer = KageClone.game.map.createLayer('blockedLayer');
+    KageClone.game.world.sendToBack( KageClone.game.blockedLayer );
     //KageClone.game.gameBkg = KageClone.game.map.createLayer('gameBkg');
     KageClone.game.blockedLayer.scale.set(1);
     //KageClone.game.gameBkg.scale.set(1);
@@ -97,7 +97,7 @@ function create() {
     //KageClone.game.time.slowMotion = 10;
 
     // Stretch to fill
-    // KageClone.game.scale.fullScreenScaleMode = Phaser.ScaleManager.EXACT_FIT;
+    //KageClone.game.scale.fullScreenScaleMode = Phaser.ScaleManager.EXACT_FIT;
     // Keep original size
     // KageClone.game.scale.fullScreenScaleMode = Phaser.ScaleManager.NO_SCALE;
     // Maintain aspect ratio
@@ -178,7 +178,7 @@ function update() {
 
 function goFullScreen() {
     if (KageClone.game.scale.isFullScreen) {
-        KageClone.game.scale.stopFullScreen();
+        //KageClone.game.scale.stopFullScreen();
     } else {
         KageClone.game.scale.startFullScreen(false);
     }

@@ -3,7 +3,7 @@ var registerAnimations = function( player ){
 
     player.animations.add(
         'ninja-hayate-movin-ground-calmed',
-        Phaser.Animation.generateFrameNames('ground_run_', 1, 3),
+        Phaser.Animation.generateFrameNames('ground_run_', 1, 4),
         8, true);
 
     player.animations.add(

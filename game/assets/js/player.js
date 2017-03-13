@@ -18,9 +18,9 @@ NinjaPlayer = function NinjaPlayer(game, startPoint) {
     // Register animations
     registerAnimations( this );
     // Physics properties of the player
-    this.spd                     = 60; // v sub x
+    this.spd                     = 36; // v sub x
     this.jump_height_max         = 64; // h.
-    this.jump_distance_max       = 32; // (x sub h)
+    this.jump_distance_max       = 24; // (x sub h)
     this.jump_distance_to_peak   = this.jump_distance_max / 2; // x sub h
     this.jump_time_to_peak       = this.jump_distance_to_peak / this.spd; // t sub h (shouldn't be needed)
     this.jspd                    = (2*this.jump_height_max) / this.jump_time_to_peak;
@@ -138,7 +138,7 @@ NinjaPlayer.prototype.update = function() {
             }
             if (xm) {
                 this.scale.setTo(xm,1);
-                if(!fsm.is( 'crouching' )){
+                if( !fsm.is( 'crouching' ) ){
                     fsm.moveEvent( nowGrounded );
                     this.body.velocity.x += this.scale.x * this.spd;
                 }
@@ -168,6 +168,10 @@ NinjaPlayer.prototype.update = function() {
                 } else if( fsm.can('airAttackEvent') ) {
                     fsm.airAttackEvent( self );
                 }
+            }
+            if( fsm.is( 'neutral' ) ){
+                // Correct minimal out of focus effect
+                this.body.x = Math.round(this.body.x);
             }
             break;
 
