@@ -31,7 +31,8 @@ NinjaPlayer = function NinjaPlayer(game, startPoint) {
     this.body.gravity.y          = this.grav;
     this.body.collideWorldBounds = true;
     // Physics body size
-    this.body.setSize(32, 32, 0, 0);
+    //this.body.setSize(40, 40, 0, 0);
+    this.body.setSize(24, 32, 8, 8);
     // Finally add the sprite to the game
     game.add.existing(this);
 
@@ -93,6 +94,24 @@ NinjaPlayer.prototype.update = function() {
     var fsm = this.sm;
 
     switch(this.controlMode) {
+        case 'climbing':
+            var nowGrounded = this.body.touching.down || this.body.blocked.down;
+            var nowCeiled = this.body.touching.up || this.body.blocked.up;
+            var mov = this.getMovement(),
+                xm  = mov.xm, 
+                ym  = mov.ym;
+
+            dbug.state = fsm.current;
+            //this.body.gravity.y = 0;
+
+            //game.physics.arcade.isPaused
+            if(nowGrounded && ym > 0){
+                fsm.testEvent({'dir':'up', 'player':this});
+            } else if(nowGrounded && ym < 0){
+                fsm.testEvent({'dir':'up', 'player':this});
+            }
+
+            break;
         case 'fsmold':
             // Apply friction
             this.body.velocity.x = this.body.velocity.x * this.frictionX;
@@ -113,6 +132,7 @@ NinjaPlayer.prototype.update = function() {
             //console.log( fsm.transitions() );
             var wasGrounded = fsm.is( 'crouching' ) || fsm.is( 'neutral' ) || fsm.is( 'running' );
             var nowGrounded = this.body.touching.down || this.body.blocked.down;
+            var nowCeiled = this.body.touching.up || this.body.blocked.up;
             var wasDown = fsm.is( 'crouching' );
             var nowDown = ym < 0;
             var jumpPressed = ym > 0;
@@ -125,7 +145,17 @@ NinjaPlayer.prototype.update = function() {
                 releasedJump = true;
             }
             */
-            if (nowGrounded && !wasGrounded) {
+           
+            // IT KINDA WORKS
+            /*
+            if(nowCeiled && ym > 0){
+                fsm.testEvent({'dir':'up', 'player':this});
+            } else if(nowGrounded && ym < 0){
+                fsm.testEvent({'dir':'down', 'player':this});
+            }
+            */
+
+            if (nowGrounded && !wasGrounded || nowGrounded && fsm.is( 'falling' )) {
                 fsm.hitGroundEvent();
             }
             /*
@@ -136,7 +166,8 @@ NinjaPlayer.prototype.update = function() {
             if (!nowGrounded && wasGrounded) {
                 fsm.fallEvent();
             }
-            if (xm) {
+            if (xm && !this.isAttacking) {
+                // side facing
                 this.scale.setTo(xm,1);
                 if( !fsm.is( 'crouching' ) ){
                     fsm.moveEvent( nowGrounded );
@@ -170,7 +201,7 @@ NinjaPlayer.prototype.update = function() {
                 }
             }
             if( fsm.is( 'neutral' ) ){
-                // Correct minimal out of focus effect
+                // Correct minimal out-of-focus effect (pixel approximation)
                 this.body.x = Math.round(this.body.x);
             }
             break;

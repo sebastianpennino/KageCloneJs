@@ -1,7 +1,7 @@
 var Phaser  = Phaser  || {};
 var KageClone = KageClone || {};
 KageClone.version = "0.0.2a";
-KageClone.shouldDebug = true;
+KageClone.shouldDebug = false;
 KageClone.getVersion = function () {
     "use strict";
     return this.version;
@@ -45,7 +45,8 @@ function create() {
     //KageClone.game.stage.backgroundColor = '#337799';
     KageClone.game.stage.backgroundColor = '#CCCCCC';
 
-    var startLoc = new Phaser.Point(32, 32);  // was 320, 2400
+    //var startLoc = new Phaser.Point(32, 32);  // was 320, 2400
+    var startLoc = new Phaser.Point( 636, 88 );  // was 320, 2400
     ninja = new NinjaPlayer( KageClone.game, startLoc );
     window.ninja = ninja;
     // Our controls
@@ -193,7 +194,8 @@ function render() {
     }
     var xoffset = 10;
     if(!KageClone.shouldDebug){
-        KageClone.game.debug.text('(P) to toggle pause', xoffset, 64, myFont.color, myFont.desc );
+        KageClone.game.debug.text('FSM: '+dbug.state, xoffset, KageClone.game.camera.view.height/2, '#FF0000', '15px Arial');
+        KageClone.game.debug.text('(P) to pause, (S) to jump, (D) to attack', xoffset, 64, myFont.color, myFont.desc );
         KageClone.game.debug.text('(O) to toggle debug (needs movement for the bounding boxes to appear)', xoffset, 84, myFont.color, myFont.desc);
     } else{ 
         //KageClone.game.debug.cameraInfo(KageClone.game.camera, 32, 160);

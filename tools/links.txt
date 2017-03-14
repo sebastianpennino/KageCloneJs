@@ -1,2 +1,4 @@
 
-Atlas building: https://www.leshylabs.com/apps/sstool/
+Atlas building: 
+tool: https://www.leshylabs.com/apps/sstool/
+tutorial: https://www.joshmorony.com/how-to-create-animations-in-phaser-with-a-texture-atlas/
