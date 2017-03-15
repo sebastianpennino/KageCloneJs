@@ -5,7 +5,7 @@
  * @class PauseMenu
  * @constructor
  * @param {Object} game              - A Phaser.game reference
- * @param {Phaser.Point} offset      - Starting coordinates for the menu creation
+ * @param {Phaser.Point} startPos      - Starting coordinates for the menu creation
  * @param {String} assetName         - Asset name (must be previously defined)
  * @param {Object} config            - optional configuration object
  * @param {number} [config.cellh=48] - The height of a single cell
@@ -75,7 +75,7 @@ PauseMenu.prototype.addSprite = function addSprite(offsetx, offsety, assetName, 
  * @return {Array} - the resultant array
  */
 PauseMenu.prototype.fillWeapons = function fillWeapons( guns ){
-    var i = 0, j = 0, k = 0, wl = guns.length, capacity = this.props.maxCol * this.props.maxRow;;
+    var i = 0, j = 0, k = 0, wl = guns.length, capacity = this.props.maxCol * this.props.maxRow;
     if(wl > capacity){         throw Error('Out of bounds weapon array size ('+wl+')');}
     if(this.props.maxRow < 1){ throw Error('Weapon menu must have at least one row');}
     if(this.props.maxCol < 1){ throw Error('Weapon menu must have at least one column');}

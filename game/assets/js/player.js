@@ -64,7 +64,7 @@ NinjaPlayer = function NinjaPlayer(game, startPoint) {
 
     this.hasPressedAttack = function(){
         return attackButton.isDown;
-    }
+    };
 
     this.getVelocity = function() {
         return {
@@ -85,12 +85,6 @@ NinjaPlayer.prototype.update = function() {
     'use strict';
     //  Collide the this with the platforms
     KageClone.game.physics.arcade.collide(this, KageClone.game.blockedLayer);
-
-    var onGround = function onGround() {
-        //return this.body.touching.down || this.body.onFloor();
-        this.inTheFloor   = this.body.touching.down || this.body.blocked.down;
-        return this.inTheFloor;
-    };
 
     var fsm = this.sm;
 
@@ -193,7 +187,7 @@ NinjaPlayer.prototype.update = function() {
                 if( nowGrounded && fsm.can('grnAttackEvent') ){
                     fsm.grnAttackEvent( self );
                 } else if( fsm.can('airAttackEvent') ) {
-                    console.log('--->')
+                    console.log('--->');
                     fsm.airAttackEvent( self );
                 }
             }
