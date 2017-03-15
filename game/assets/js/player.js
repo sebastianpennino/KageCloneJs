@@ -31,7 +31,6 @@ NinjaPlayer = function NinjaPlayer(game, startPoint) {
     this.body.gravity.y          = this.grav;
     this.body.collideWorldBounds = true;
     // Physics body size
-    //this.body.setSize(40, 40, 0, 0);
     this.body.setSize(24, 32, 8, 8);
     // Finally add the sprite to the game
     game.add.existing(this);
@@ -41,6 +40,8 @@ NinjaPlayer = function NinjaPlayer(game, startPoint) {
     var jumpButton = KageClone.game.input.keyboard.addKey(Phaser.Keyboard.S);
     var attackButton = KageClone.game.input.keyboard.addKey(Phaser.Keyboard.D);
     //var cursors.a = KageClone.game.input.keyboard.addKey(Phaser.Keyboard.A);
+    this.wasPressingAttack = false;
+    this.wasPressingJump = false;
 
     this.getMovement = function() {
         var xm = 0;
@@ -135,17 +136,12 @@ NinjaPlayer.prototype.update = function() {
             var nowCeiled = this.body.touching.up || this.body.blocked.up;
             var wasDown = fsm.is( 'crouching' );
             var nowDown = ym < 0;
+            var wasJumping = this.wasPressingJump;
             var jumpPressed = ym > 0;
-            var wasAttacking = fsm.is('airAttackEvent') || fsm.is('grnAttackEvent');
+            var wasAttacking = fsm.is('airAttackEvent') || fsm.is('grnAttackEvent') || this.wasPressingAttack;
             var isPressingAttack = this.hasPressedAttack();
             var self = this;
-            /*
-            var releasedJump = true; // was state.releasedJump...see how can we detect that
-            if (!releasedJump && !jumpPressed) {
-                releasedJump = true;
-            }
-            */
-           
+
             // IT KINDA WORKS
             /*
             if(nowCeiled && ym > 0){
@@ -180,7 +176,7 @@ NinjaPlayer.prototype.update = function() {
                 fsm.jumpEvent();
             }
             */
-            if (ym > 0 && nowGrounded){
+            if (ym > 0 && !wasJumping && nowGrounded){
                 fsm.jumpEvent( self );
             } else if(!nowGrounded){
                 fsm.fallEvent();
@@ -197,6 +193,7 @@ NinjaPlayer.prototype.update = function() {
                 if( nowGrounded && fsm.can('grnAttackEvent') ){
                     fsm.grnAttackEvent( self );
                 } else if( fsm.can('airAttackEvent') ) {
+                    console.log('--->')
                     fsm.airAttackEvent( self );
                 }
             }
@@ -204,6 +201,9 @@ NinjaPlayer.prototype.update = function() {
                 // Correct minimal out-of-focus effect (pixel approximation)
                 this.body.x = Math.round(this.body.x);
             }
+            // Update values for next frame
+            this.wasPressingAttack = this.hasPressedAttack();
+            this.wasPressingJump = (ym > 0);
             break;
 
         case 'experimental':
