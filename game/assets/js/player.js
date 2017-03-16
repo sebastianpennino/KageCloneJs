@@ -51,7 +51,7 @@ NinjaPlayer = function NinjaPlayer(game, startPoint) {
             xm = -1;
         }
         var ym = 0;
-        if (jumpButton.isDown || cursors.up.isDown) {
+        if (jumpButton.isDown || cursors.up.isDown) { //jumpButton.isDown ||
             ym = 1;
         } else if (cursors.down.isDown) {
             ym = -1;
@@ -60,6 +60,10 @@ NinjaPlayer = function NinjaPlayer(game, startPoint) {
             xm: xm,
             ym: ym
         };
+    };
+
+    this.hasPressedJump = function(){
+        return jumpButton.isDown;
     };
 
     this.hasPressedAttack = function(){
@@ -74,6 +78,13 @@ NinjaPlayer = function NinjaPlayer(game, startPoint) {
     };
     // Register states
     registerStates( this );
+/*
+    var mySensor  = KageClone.game.add.group();
+    var blockSensor = mySensor.create(this.x, this.y, 'blackout');
+        blockSensor.scale.setTo(1, 1);
+        blockSensor.alpha = 0.8;
+        mySensor.add( this )
+*/
 };
 
 // Inherit from Sprite
@@ -126,12 +137,12 @@ NinjaPlayer.prototype.update = function() {
             //console.log( fsm.current, xm, ym, xv, yv  );
             //console.log( fsm.transitions() );
             var wasGrounded = fsm.is( 'crouching' ) || fsm.is( 'neutral' ) || fsm.is( 'running' );
-            var nowGrounded = this.body.touching.down || this.body.blocked.down;
-            var nowCeiled = this.body.touching.up || this.body.blocked.up;
+            var nowGrounded = (this.body.touching.down || this.body.blocked.down);
+            var nowCeiled = (this.body.touching.up || this.body.blocked.up);
             var wasDown = fsm.is( 'crouching' );
             var nowDown = ym < 0;
             var wasJumping = this.wasPressingJump;
-            var jumpPressed = ym > 0;
+            var jumpPressed = this.hasPressedJump();
             var wasAttacking = fsm.is('airAttackEvent') || fsm.is('grnAttackEvent') || this.wasPressingAttack;
             var isPressingAttack = this.hasPressedAttack();
             var self = this;
@@ -145,59 +156,91 @@ NinjaPlayer.prototype.update = function() {
             }
             */
 
-            if (nowGrounded && !wasGrounded || nowGrounded && fsm.is( 'falling' )) {
-                fsm.hitGroundEvent();
+            if(nowCeiled){
+                fsm.hookEvent();
+                this.grappling = true;
             }
-            /*
-            if (!nowGrounded && wasGrounded && !jumpPressed) {
-                fsm.fallEvent();
-            }
-            */
-            if (!nowGrounded && wasGrounded) {
-                fsm.fallEvent();
-            }
-            if (xm && !this.isAttacking) {
-                // side facing
-                this.scale.setTo(xm,1);
-                if( !fsm.is( 'crouching' ) ){
-                    fsm.moveEvent( nowGrounded );
-                    this.body.velocity.x += this.scale.x * this.spd;
+
+            if( !this.grappling ){
+
+                if (nowGrounded && !wasGrounded || nowGrounded && fsm.is( 'falling' )) {
+                    fsm.hitGroundEvent();
                 }
-            }
-            /*
-            if (ym > 0 && releasedJump && nowGrounded) {
-                releasedJump = false;
-                fsm.jumpEvent();
-            }
-            */
-            if (ym > 0 && !wasJumping && nowGrounded){
-                fsm.jumpEvent( self );
-            } else if(!nowGrounded){
-                fsm.fallEvent();
-            }
-            if (ym < 0) {
-                fsm.duckEvent();
-            } else if (!ym && wasDown) {
-                fsm.standEvent();
-            }
-            if (!xm) {
-                fsm.stopEvent();
-            }
-            if(!wasAttacking && isPressingAttack){
-                if( nowGrounded && fsm.can('grnAttackEvent') ){
-                    fsm.grnAttackEvent( self );
-                } else if( fsm.can('airAttackEvent') ) {
-                    console.log('--->');
-                    fsm.airAttackEvent( self );
+                /*
+                if (!nowGrounded && wasGrounded && !jumpPressed) {
+                    fsm.fallEvent();
                 }
+                */
+                if (!nowGrounded && wasGrounded) {
+                    fsm.fallEvent();
+                }
+                if (xm && !this.isAttacking) {
+                    // side facing
+                    this.scale.setTo(xm,1);
+                    if( !fsm.is( 'crouching' ) ){
+                        fsm.moveEvent( nowGrounded );
+                        this.body.velocity.x += this.scale.x * this.spd;
+                    }
+                }
+                /*
+                if (ym > 0 && releasedJump && nowGrounded) {
+                    releasedJump = false;
+                    fsm.jumpEvent();
+                }
+                */
+                if (ym > 0 && !wasJumping && nowGrounded){
+                    fsm.jumpEvent( self );
+                } else if(!nowGrounded){
+                    fsm.fallEvent();
+                }
+                if (ym < 0) {
+                    fsm.duckEvent();
+                } else if (!ym && wasDown) {
+                    fsm.standEvent();
+                }
+                if (!xm) {
+                    fsm.stopEvent();
+                }
+                if(!wasAttacking && isPressingAttack){
+                    if( nowGrounded && fsm.can('grnAttackEvent') ){
+                        fsm.grnAttackEvent( self );
+                    } else if( fsm.can('airAttackEvent') ) {
+                        console.log('correct this sliding attack --->');
+                        fsm.airAttackEvent( self );
+                    }
+                }
+            } else {
+                if (xm && !this.isAttacking) {
+                    // side facing
+                    this.scale.setTo(xm,1);
+                    if( fsm.is( 'grapplingStill' ) || fsm.is( 'grapplingMove' ) ){
+                        fsm.moveGrapEvent();
+                        this.body.velocity.x += this.scale.x * (this.spd/2);
+                    }
+                }
+                if (!xm) {
+                    fsm.stopGrapEvent();
+                }
+                if (jumpPressed && (fsm.is( 'grapplingStill' ) || fsm.is( 'grapplingMove' )) ){
+                    fsm.releaseGrapEvent();
+                }
+                if(!wasAttacking && isPressingAttack){
+                    fsm.grapAttackEvent( self );
+                }
+                /*
+                Needs adjustment of ym > 0
+                if(ym > 0 && !isPressingAttack && fsm.is( 'grapplingStill' ) ){
+                    fsm.climbUpEvent( {'dir':'up', 'player':self} );
+                }
+                */
             }
-            if( fsm.is( 'neutral' ) ){
+            if( fsm.is( 'neutral' ) || fsm.is('grapplingStill') ){
                 // Correct minimal out-of-focus effect (pixel approximation)
                 this.body.x = Math.round(this.body.x);
             }
             // Update values for next frame
             this.wasPressingAttack = this.hasPressedAttack();
-            this.wasPressingJump = (ym > 0);
+            this.wasPressingJump = this.hasPressedJump();
             break;
 
         case 'experimental':

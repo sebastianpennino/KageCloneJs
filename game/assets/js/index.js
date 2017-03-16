@@ -195,7 +195,7 @@ function render() {
     var xoffset = 10;
     if(!KageClone.shouldDebug){
         KageClone.game.debug.text('FSM: '+dbug.state, xoffset, KageClone.game.camera.view.height/2, '#FF0000', '15px Arial');
-        KageClone.game.debug.text('(P) to pause, (S) to jump, (D) to attack', xoffset, 64, myFont.color, myFont.desc );
+        KageClone.game.debug.text('(P) to pause, (S) to jump/relasegrappling (UpArrow) to jump_GRAPPLING, (D) to attack', xoffset, 64, myFont.color, myFont.desc );
         KageClone.game.debug.text('(O) to toggle debug (needs movement for the bounding boxes to appear)', xoffset, 84, myFont.color, myFont.desc);
     } else{ 
         //KageClone.game.debug.cameraInfo(KageClone.game.camera, 32, 160);

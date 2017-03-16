@@ -5,7 +5,7 @@
  * @class PauseMenu
  * @constructor
  * @param {Object} game              - A Phaser.game reference
- * @param {Phaser.Point} startPos      - Starting coordinates for the menu creation
+ * @param {Phaser.Point} startPos    - Starting coordinates for the menu creation
  * @param {String} assetName         - Asset name (must be previously defined)
  * @param {Object} config            - optional configuration object
  * @param {number} [config.cellh=48] - The height of a single cell

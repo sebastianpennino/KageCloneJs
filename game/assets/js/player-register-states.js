@@ -30,9 +30,11 @@ var registerStates = function( player ){
             {name: 'hitGroundEvent'   , from: 'falling', to: 'neutral'},
             // Player control: SoftPlatformDown
             // Player control: Grappling and SoftPlatformUP
-            {name: 'hookEvent'        , from: ['falling', 'jumping'], to: 'grapplingStill'},
+            {name: 'hookEvent'        , from: '*', to: 'grapplingStill'},
             {name: 'moveGrapEvent'    , from: 'grapplingStill', to: 'grapplingMove'},
             {name: 'stopGrapEvent'    , from: 'grapplingMove', to: 'grapplingStill'},
+            {name: 'grapAttackEvent'  , from: ['grapplingStill', 'grapplingMove'], to: 'grapplingAttack'},
+            {name: 'calmDownEvent'    , from: ['grapplingAttack'], to: 'grapplingStill'},
             {name: 'releaseGrapEvent' , from: ['grapplingStill', 'grapplingMove'], to: 'falling'},
             {name: 'climbUpEvent'     , from: ['grapplingStill', 'grapplingMove'], to: 'climbUp'},
             {name: 'adjustEvent'      , from: 'climbUp', to: 'neutral'},
@@ -41,7 +43,9 @@ var registerStates = function( player ){
             {name: 'revertTestEvent'  , from: '*', to: 'neutral'}
         ],
         callbacks : {
-            onentertest: function(event, from, to, obj) {
+            onenterclimbUpEvent: function(event, from, to, obj) {
+                // THIS HAS TO USE PHASER TWEENS ANIMATIONS INSTEAD OF CHANGING THE POSITION.
+
                 //console.log('climbing '+obj.dir);
                 if(obj.dir === 'up'){
                     obj.player.body.y = obj.player.body.y - 32;
@@ -63,8 +67,25 @@ var registerStates = function( player ){
                     }, obj.player);
                 return StateMachine.ASYNC;
             },
+            onentergrapplingStill: function(event, from, to, msg){
+                player.body.velocity.y = 0;
+                player.body.gravity.y = 0;
+                console.log('grappling mode entered!');
+                animations.play('grapple');
+            },
+            ongrapplingMove: function(event, from, to, msg){
+                animations.play('grapple_mv', 6, true, false);
+            },
+            onentergrapplingAttack: function(event, from, to, player){
+                animations
+                    .play('grapple_at', 8, false, false)
+                    .onComplete.add(function () {  
+                        //console.log('animation complete, returning to calmness');
+                        player.sm.calmDownEvent();
+                    }, player);
 
-
+                return StateMachine.ASYNC; // tell StateMachine to defer next state until we call transition (in slideUp callback above)
+            },
             onenterneutral: function(event, from, to, msg) { 
                 animations.stop();
                 animations.frame = 0;
@@ -78,6 +99,8 @@ var registerStates = function( player ){
                 player.body.velocity.y -= player.jspd;
             },
             onenterfalling: function(event, from, to){
+                player.body.gravity.y = player.grav;
+                player.grappling = false;
                 animations.play('jump');
             },
             onrunning: function(event, from, to, isInFloor){
