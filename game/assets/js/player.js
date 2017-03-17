@@ -91,33 +91,33 @@ NinjaPlayer = function NinjaPlayer(game, startPoint) {
 NinjaPlayer.prototype = Object.create(Phaser.Sprite.prototype);
 NinjaPlayer.prototype.constructor = NinjaPlayer;
 
+function collisionHandler (player, tile) {
+    return true;
+};
+
+function processCallback(player, tile){
+    //console.log(player, tile);
+    if(!player.grappling){
+        if(tile && tile.layer && tile.layer.name === "blockedLayer"){
+            if(tile.properties.grappleOnlyCollision){
+                // Don't trigger collision
+                return false;
+            }
+        }
+    }
+    // Normal block
+    return true;
+}
+
 //  Automatically called by World.update
 NinjaPlayer.prototype.update = function() {
     'use strict';
     //  Collide the this with the platforms
-    KageClone.game.physics.arcade.collide(this, KageClone.game.blockedLayer);
+    KageClone.game.physics.arcade.collide(this, KageClone.game.blockedLayer, collisionHandler, processCallback );
 
     var fsm = this.sm;
 
     switch(this.controlMode) {
-        case 'climbing':
-            var nowGrounded = this.body.touching.down || this.body.blocked.down;
-            var nowCeiled = this.body.touching.up || this.body.blocked.up;
-            var mov = this.getMovement(),
-                xm  = mov.xm, 
-                ym  = mov.ym;
-
-            dbug.state = fsm.current;
-            //this.body.gravity.y = 0;
-
-            //game.physics.arcade.isPaused
-            if(nowGrounded && ym > 0){
-                fsm.testEvent({'dir':'up', 'player':this});
-            } else if(nowGrounded && ym < 0){
-                fsm.testEvent({'dir':'up', 'player':this});
-            }
-
-            break;
         case 'fsmold':
             // Apply friction
             this.body.velocity.x = this.body.velocity.x * this.frictionX;
@@ -155,8 +155,12 @@ NinjaPlayer.prototype.update = function() {
                 fsm.testEvent({'dir':'down', 'player':this});
             }
             */
+            //KageClone.game.physics.arcade.overlap(self, KageClone.game.grapplingLimitsLayer, collisionHandler, null, this);
 
             if(nowCeiled){
+                //http://www.html5gamedevs.com/topic/19311-detecting-the-collision-side/
+                //https://phaser.io/examples/v2/arcade-physics/custom-sprite-vs-group --->
+                // game.physics.arcade.overlap(sprite, group, collisionHandler, null, this);
                 fsm.hookEvent();
                 this.grappling = true;
             }
@@ -253,3 +257,4 @@ NinjaPlayer.prototype.update = function() {
 
 };
 
+ 

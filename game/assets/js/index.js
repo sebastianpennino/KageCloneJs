@@ -72,14 +72,16 @@ function create() {
     //create layer
     //KageClone.game.back = KageClone.game.map.createLayer('background');
     KageClone.game.blockedLayer = KageClone.game.map.createLayer('blockedLayer');
+    KageClone.game.grapplingLimitsLayer = KageClone.game.map.createLayer('grapplingLimitsLayer');
+    
     KageClone.game.world.sendToBack( KageClone.game.blockedLayer );
     //KageClone.game.gameBkg = KageClone.game.map.createLayer('gameBkg');
     KageClone.game.blockedLayer.scale.set(1);
-    //KageClone.game.gameBkg.scale.set(1);
     //collision on blockedLayer
     KageClone.game.map.setCollisionBetween(1, 2000, true, 'blockedLayer');
-    //  This will set Tile ID 4 (red blocks) to call the hitDestroy function when collided with
-    KageClone.game.map.setTileIndexCallback(4, hitDestroy, this);
+    //  This will set Tile ID 2 (arrowblocks) to call the hitOnlyGrappling function when collided with
+    //KageClone.game.map.setTileIndexCallback(3, hitOnlyGrappling, this);
+    
     KageClone.game.blockedLayer.resizeWorld();
     //KageClone.game.gameBkg.resizeWorld();
     // Added debug on pressing 'O'
@@ -106,12 +108,15 @@ function create() {
     KageClone.game.input.onDown.add(goFullScreen, this);
 }
 
-function hitDestroy(sprite, tile) {
+function hitOnlyGrappling(player, tile) {
     "use strict";
+    /*
     tile.alpha = 0.2;
     tile.ninjaDestroyed = true;
     KageClone.game.blockedLayer.dirty = true;
     return false;
+    */
+    return player.grappling;
 }
 var darkScreen;
 var pauseMenu;
@@ -227,5 +232,5 @@ function toggleDebug() {
 }
 
 // Dev 640 x 480 ||  NES 16:9 ---> 426 x 240  || Original NES Resolution ---> 256 x 240
-KageClone.game = new Phaser.Game(426, 240, Phaser.CANVAS, '', { preload: preload, create: create, update: update, render: render });
+KageClone.game = new Phaser.Game(256, 240, Phaser.CANVAS, '', { preload: preload, create: create, update: update, render: render });
 
