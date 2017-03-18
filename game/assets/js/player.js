@@ -78,13 +78,42 @@ NinjaPlayer = function NinjaPlayer(game, startPoint) {
     };
     // Register states
     registerStates( this );
-/*
-    var mySensor  = KageClone.game.add.group();
-    var blockSensor = mySensor.create(this.x, this.y, 'blackout');
-        blockSensor.scale.setTo(1, 1);
-        blockSensor.alpha = 0.8;
-        mySensor.add( this )
-*/
+
+    // Grappling Hitbox
+    var gpx = this.gHitBox = game.make.sprite(-12, -20, 'hpx');
+    gpx.width = 24;
+    gpx.height = 8;
+    gpx.alpha = 0.3;
+    gpx.tint = "0xFFFF00"
+    gpx.enableBody = true;
+    gpx.physicsBodyType = Phaser.Physics.ARCADE;
+
+    this.addChild( gpx );
+
+    /*
+    NORMAL
+    var hpx = game.make.sprite(4, -12, 'hpx');
+    hpx.width = 16;
+    hpx.height = 20;
+    hpx.alpha = 0.3;
+    */
+    /*
+    DUCK
+    var hpx = game.make.sprite(4, -4, 'hpx');
+    hpx.width = 16;
+    hpx.height = 20;
+    hpx.alpha = 0.3;
+    */
+    // Attack Hitbox
+    var hpx = this.aHitBox = game.make.sprite(4, -12, 'hpx');
+    hpx.width = 16;
+    hpx.height = 32;
+    hpx.alpha = 0.3;
+    hpx.tint = "0xFF0000"
+    //hpx.enableBody = true;
+    //hpx.physicsBodyType = Phaser.Physics.ARCADE;
+
+    this.addChild( hpx );
 };
 
 // Inherit from Sprite
@@ -109,11 +138,30 @@ function processCallback(player, tile){
     return true;
 }
 
+function checkOverlapWhileAttacking(playerSprite, groupOfSprites, prop) {
+    var boundsB, 
+        boundsA = playerSprite[ prop ].getBounds(),
+        boundsIntersect = groupOfSprites.children.some(function checkBounds( sprite ) {
+            boundsB = sprite.getBounds();
+            if( Phaser.Rectangle.intersects(boundsA, boundsB) ){
+                sprite.kill();
+                return true;
+            }
+        })
+    return boundsIntersect;
+}
+
 //  Automatically called by World.update
 NinjaPlayer.prototype.update = function() {
     'use strict';
     //  Collide the this with the platforms
     KageClone.game.physics.arcade.collide(this, KageClone.game.blockedLayer, collisionHandler, processCallback );
+    // Check collision with enemies
+    if(this.isAttacking){
+        dbug.hitEnemy = checkOverlapWhileAttacking(this, enemyGroup, 'aHitBox');
+    } else {
+        dbug.hitEnemy = false;
+    }
 
     var fsm = this.sm;
 
@@ -156,6 +204,10 @@ NinjaPlayer.prototype.update = function() {
             }
             */
             //KageClone.game.physics.arcade.overlap(self, KageClone.game.grapplingLimitsLayer, collisionHandler, null, this);
+
+            // Check collision for grappling
+            //var nowCeiled = (this['gHitBox'].body.blocked.up);
+            //console.log(this['gHitBox'].body)
 
             if(nowCeiled){
                 //http://www.html5gamedevs.com/topic/19311-detecting-the-collision-side/
