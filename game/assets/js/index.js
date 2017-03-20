@@ -12,20 +12,16 @@ var dbug = {};
 
 function preload() {
     "use strict";
-    //KageClone.game.load.tilemap('initial-level', 'assets/levels/level_boat.json', null, Phaser.Tilemap.TILED_JSON);
     KageClone.game.load.tilemap('initial-level', 'assets/levels/level_boat_v2.json', null, Phaser.Tilemap.TILED_JSON);
-    //KageClone.game.load.image('gameTiles', 'assets/images/32x32_tileset.jpg');
-    //KageClone.game.load.image('gameTiles', 'assets/images/tilesets/kage_level_1_8x8.jpg');
-    //KageClone.game.load.image('gameBkg', 'assets/images/tilesets/kage_level_1_16x16.jpg');
     KageClone.game.load.image('8x8_blank', 'assets/images/tilesets/8x8_blank.png');
     KageClone.game.load.image('plan', 'assets/images/kage_level_1_plan.png');
-
 
     KageClone.game.load.image('pauseMenu', 'assets/images/pause_menu_back.jpg');
     KageClone.game.load.image('selectMenu', 'assets/images/pause_menu_select.png');
     KageClone.game.load.image('blackout', 'assets/images/black.png');
     KageClone.game.load.image('hudback', 'assets/images/hud_bkg.png');
     KageClone.game.load.image('hpx', 'assets/images/health_pixel.jpg');
+    KageClone.game.load.image('pix', 'assets/images/grey_pixel.jpg');
     KageClone.game.load.image('fakeEnemy', 'assets/images/enemy_placeholder.png');
     // Hayate Atlas
     KageClone.game.load.atlas('hayate', 'assets/images/hayate/hayate.png', 'assets/images/hayate/hayate_hash.json',Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
@@ -78,10 +74,11 @@ function create() {
     KageClone.game.world.sendToBack( KageClone.game.blockedLayer );
     //KageClone.game.gameBkg = KageClone.game.map.createLayer('gameBkg');
     KageClone.game.blockedLayer.scale.set(1);
-    //collision on blockedLayer
-    KageClone.game.map.setCollisionBetween(1, 2000, true, 'blockedLayer');
-    //  This will set Tile ID 2 (arrowblocks) to call the hitOnlyGrappling function when collided with
-    //KageClone.game.map.setTileIndexCallback(3, hitOnlyGrappling, this);
+    //collision on blockedLayer (block IDs 1 to 4)
+    KageClone.game.map.setCollisionBetween(1, 21, true, 'blockedLayer');
+    //  This will set Tile ID 20 and 21 (grappling, grappling-soft-platform) to call the grapplingEnabled function when collided with
+    KageClone.game.map.setTileIndexCallback(21, hitOnlyGrappling, this);
+    KageClone.game.map.setTileIndexCallback(20, hitOnlyGrappling, this);
     
     KageClone.game.blockedLayer.resizeWorld();
     //KageClone.game.gameBkg.resizeWorld();
@@ -119,6 +116,7 @@ function create() {
     enemyGroup.create(1569, 112, 'fakeEnemy').scale.setTo(-1,1);
 }
 
+
 function hitOnlyGrappling(player, tile) {
     "use strict";
     /*
@@ -127,7 +125,8 @@ function hitOnlyGrappling(player, tile) {
     KageClone.game.blockedLayer.dirty = true;
     return false;
     */
-    return player.grappling;
+    console.log(player, this)
+    return true;
 }
 var darkScreen;
 var pauseMenu;
@@ -245,6 +244,6 @@ function toggleDebug() {
 }
 
 // Dev 640 x 480 ||  NES 16:9 ---> 426 x 240  || Original NES Resolution ---> 256 x 240
-KageClone.game = new Phaser.Game(426, 240, Phaser.CANVAS, '', { preload: preload, create: create, update: update, render: render });
+KageClone.game = new Phaser.Game(426, 240, Phaser.CANVAS, 'Kage', { preload: preload, create: create, update: update, render: render }, false, false );
 
 

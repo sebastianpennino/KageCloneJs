@@ -99,9 +99,13 @@ var registerStates = function( player ){
                 player.body.velocity.y -= player.jspd;
             },
             onenterfalling: function(event, from, to){
+                //player.setBodySize('jump');
                 player.body.gravity.y = player.grav;
                 player.grappling = false;
                 animations.play('jump');
+            },
+            onleavefalling: function(){
+                //player.setBodySize('normal');
             },
             onrunning: function(event, from, to, isInFloor){
                 //player.body.velocity.x += player.scale.x * player.spd;

@@ -36,7 +36,6 @@ var HUD = function HUD(game, startPos, assetName, config){
     this.props       = props;
     this.props.enums = enums;
 
-
     this.healthSprite = this.create(75, 5, 'hpx');
     this.healthSprite.anchor.setTo(0, 0);
     this.healthSprite.fixedToCamera = true

@@ -43,6 +43,19 @@ NinjaPlayer = function NinjaPlayer(game, startPoint) {
     this.wasPressingAttack = false;
     this.wasPressingJump = false;
 
+    /*
+    this.setBodySize = function( mode ){
+        switch (mode) {
+            case 'jump':
+                this.body.setSize(24, 32, 8, 0);
+                break;
+            default:
+                this.body.setSize(24, 32, 8, 8);
+                break;
+        }
+    }
+    */
+
     this.getMovement = function() {
         var xm = 0;
         if (cursors.right.isDown) {
@@ -80,11 +93,11 @@ NinjaPlayer = function NinjaPlayer(game, startPoint) {
     registerStates( this );
 
     // Grappling Hitbox
-    var gpx = this.gHitBox = game.make.sprite(-12, -20, 'hpx');
+    var gpx = this.gHitBox = game.make.sprite(-12, -20, 'pix');
     gpx.width = 24;
     gpx.height = 8;
-    gpx.alpha = 0.3;
-    gpx.tint = "0xFFFF00"
+    gpx.alpha = 0.5;
+    gpx.tint = "0xFFFF00"; // Yellowish
     gpx.enableBody = true;
     gpx.physicsBodyType = Phaser.Physics.ARCADE;
 
@@ -92,28 +105,28 @@ NinjaPlayer = function NinjaPlayer(game, startPoint) {
 
     /*
     NORMAL
-    var hpx = game.make.sprite(4, -12, 'hpx');
-    hpx.width = 16;
-    hpx.height = 20;
-    hpx.alpha = 0.3;
+    var pix = game.make.sprite(4, -12, 'pix');
+    pix.width = 16;
+    pix.height = 20;
+    pix.alpha = 0.3;
     */
     /*
     DUCK
-    var hpx = game.make.sprite(4, -4, 'hpx');
-    hpx.width = 16;
-    hpx.height = 20;
-    hpx.alpha = 0.3;
+    var pix = game.make.sprite(4, -4, 'pix');
+    pix.width = 16;
+    pix.height = 20;
+    pix.alpha = 0.3;
     */
     // Attack Hitbox
-    var hpx = this.aHitBox = game.make.sprite(4, -12, 'hpx');
-    hpx.width = 16;
-    hpx.height = 32;
-    hpx.alpha = 0.3;
-    hpx.tint = "0xFF0000"
-    //hpx.enableBody = true;
-    //hpx.physicsBodyType = Phaser.Physics.ARCADE;
+    var apx = this.aHitBox = game.make.sprite(4, -12, 'pix');
+    apx.width = 16;
+    apx.height = 32;
+    apx.alpha = 0.5;
+    apx.tint = "0xFF0000"; // Red-ish
+    //apx.enableBody = true;
+    //apx.physicsBodyType = Phaser.Physics.ARCADE;
 
-    this.addChild( hpx );
+    this.addChild( apx );
 };
 
 // Inherit from Sprite
@@ -155,7 +168,7 @@ function checkOverlapWhileAttacking(playerSprite, groupOfSprites, prop) {
 NinjaPlayer.prototype.update = function() {
     'use strict';
     //  Collide the this with the platforms
-    KageClone.game.physics.arcade.collide(this, KageClone.game.blockedLayer, collisionHandler, processCallback );
+    KageClone.game.physics.arcade.collide(this, KageClone.game.blockedLayer, collisionHandler, processCallback);
     // Check collision with enemies
     if(this.isAttacking){
         dbug.hitEnemy = checkOverlapWhileAttacking(this, enemyGroup, 'aHitBox');
