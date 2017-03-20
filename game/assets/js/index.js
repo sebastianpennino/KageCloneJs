@@ -27,6 +27,18 @@ function preload() {
     KageClone.game.load.atlas('hayate', 'assets/images/hayate/hayate.png', 'assets/images/hayate/hayate_hash.json',Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
 }
 
+function hitOnlyGrappling(player, tile) {
+    "use strict";
+    /*
+    tile.alpha = 0.2;
+    tile.ninjaDestroyed = true;
+    KageClone.game.blockedLayer.dirty = true;
+    return false;
+    */
+    console.log(player, this)
+    return true;
+}
+
 var ninja, cursors;
 var debugKey, pauseKey, pause_label, pause_legend;
 var backgroundGroup;
@@ -116,18 +128,6 @@ function create() {
     enemyGroup.create(1569, 112, 'fakeEnemy').scale.setTo(-1,1);
 }
 
-
-function hitOnlyGrappling(player, tile) {
-    "use strict";
-    /*
-    tile.alpha = 0.2;
-    tile.ninjaDestroyed = true;
-    KageClone.game.blockedLayer.dirty = true;
-    return false;
-    */
-    console.log(player, this)
-    return true;
-}
 var darkScreen;
 var pauseMenu;
 
@@ -212,6 +212,7 @@ function render() {
         KageClone.game.debug.text('FSM: '+dbug.state, xoffset, KageClone.game.camera.view.height/2, '#FF0000', '15px Arial');
         KageClone.game.debug.text('(P) to pause, (S) to jump/relasegrappling (UpArrow) to jump_GRAPPLING, (D) to attack', xoffset, 12, myFont.color, myFont.desc );
         KageClone.game.debug.text('(O) to toggle debug (needs movement for the bounding boxes to appear)', xoffset, 24, myFont.color, myFont.desc);
+        KageClone.game.debug.text('TileProps: '+dbug.tileprops, xoffset, KageClone.game.camera.view.height-32,  myFont.color, myFont.desc);
         KageClone.game.debug.text('EnemyHit: '+dbug.hitEnemy, xoffset, KageClone.game.camera.view.height-16,  myFont.color, myFont.desc);
         //KageClone.game.debug.text('GrapplingHit: '+dbug.hitGrapple, xoffset, KageClone.game.camera.view.height-32,  myFont.color, myFont.desc);
     } else{ 

@@ -1,3 +1,5 @@
+var marker;
+
 /**
  * NinjaPlayer Class
  * Creates a new NinjaPlayer
@@ -127,6 +129,11 @@ NinjaPlayer = function NinjaPlayer(game, startPoint) {
     //apx.physicsBodyType = Phaser.Physics.ARCADE;
 
     this.addChild( apx );
+
+
+    marker = game.add.graphics();
+    marker.lineStyle(2, 0xffffff, 1);
+    marker.drawRect(0, 0, 8, 8);
 };
 
 // Inherit from Sprite
@@ -149,6 +156,37 @@ function processCallback(player, tile){
     }
     // Normal block
     return true;
+}
+
+function checkOverlapGrappling(playerSprite, layer, prop){
+    var boundsB, 
+        boundsA = playerSprite[ prop ].getBounds();
+    var boundsIntersect = layer.children.some(function checkBounds( sprite ) {
+            boundsB = sprite.getBounds();
+            if( Phaser.Rectangle.intersects(boundsA, boundsB) ){
+                sprite.kill();
+                return true;
+            }
+        })
+    return boundsIntersect;
+}
+
+
+function getTileProperties( layer, xcoord, ycoord ) {
+    var x = layer.getTileX( xcoord );
+    var y = layer.getTileY( ycoord );
+    marker.x = x * 8;
+    marker.y = y * 8;
+    var tile = KageClone.game.map.getTile(x, y, layer);
+
+    if( tile && tile.properties ){
+        // Note: JSON.stringify will convert the object tile properties to a string
+        dbug.tileprops = JSON.stringify( tile.properties );
+        return tile.properties.grappleEnabled;
+    } else {
+        dbug.tileprops = '';
+        return false;
+    }
 }
 
 function checkOverlapWhileAttacking(playerSprite, groupOfSprites, prop) {
@@ -207,6 +245,7 @@ NinjaPlayer.prototype.update = function() {
             var wasAttacking = fsm.is('airAttackEvent') || fsm.is('grnAttackEvent') || this.wasPressingAttack;
             var isPressingAttack = this.hasPressedAttack();
             var self = this;
+            var grapplingMode = false;
 
             // IT KINDA WORKS
             /*
@@ -221,7 +260,15 @@ NinjaPlayer.prototype.update = function() {
             // Check collision for grappling
             //var nowCeiled = (this['gHitBox'].body.blocked.up);
             //console.log(this['gHitBox'].body)
-
+            
+            if(nowCeiled){
+                var isGrappable = getTileProperties( KageClone.game.blockedLayer, Math.ceil(this.world.x), Math.ceil(this.world.y - 24) );
+                if(isGrappable){
+                    fsm.hookEvent();
+                    this.grappling = true;
+                }
+            }
+/*
             if(nowCeiled){
                 //http://www.html5gamedevs.com/topic/19311-detecting-the-collision-side/
                 //https://phaser.io/examples/v2/arcade-physics/custom-sprite-vs-group --->
@@ -229,7 +276,7 @@ NinjaPlayer.prototype.update = function() {
                 fsm.hookEvent();
                 this.grappling = true;
             }
-
+*/
             if( !this.grappling ){
 
                 if (nowGrounded && !wasGrounded || nowGrounded && fsm.is( 'falling' )) {
