@@ -175,15 +175,22 @@ function checkOverlapGrappling(playerSprite, layer, prop){
 function getTileProperties( layer, xcoord, ycoord ) {
     var x = layer.getTileX( xcoord );
     var y = layer.getTileY( ycoord );
+    var y2 = layer.getTileY( ycoord + 8 );
     marker.x = x * 8;
     marker.y = y * 8;
+    
     var tile = KageClone.game.map.getTile(x, y, layer);
+    var tile2 = KageClone.game.map.getTile(x, y2, layer);
 
     if( tile && tile.properties ){
         // Note: JSON.stringify will convert the object tile properties to a string
-        dbug.tileprops = JSON.stringify( tile.properties );
+        dbug.tileprops = '(y1): '+JSON.stringify( tile.properties );
         return tile.properties.grappleEnabled;
-    } else {
+    } else if(tile2 && tile2.properties){
+        marker.y = y2 * 8;
+        dbug.tileprops = '(y2): '+JSON.stringify( tile2.properties );
+        return tile2.properties.grappleEnabled;
+    }else {
         dbug.tileprops = '';
         return false;
     }
@@ -262,7 +269,7 @@ NinjaPlayer.prototype.update = function() {
             //console.log(this['gHitBox'].body)
             
             if(nowCeiled){
-                var isGrappable = getTileProperties( KageClone.game.blockedLayer, Math.ceil(this.world.x), Math.ceil(this.world.y - 24) );
+                var isGrappable = getTileProperties( KageClone.game.blockedLayer, Math.ceil(this.world.x), Math.floor(this.world.y - 24) );
                 if(isGrappable){
                     fsm.hookEvent();
                     this.grappling = true;
