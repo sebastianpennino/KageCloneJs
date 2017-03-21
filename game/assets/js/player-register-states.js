@@ -6,7 +6,6 @@ var registerStates = function( player ){
         initial: 'neutral',
         error: function(eventName, from, to, args, errorCode, errorMessage, originalException) {
             //return 'event ' + eventName + ' was naughty :- ' + errorMessage;
-            ////console.log('.');
         },
         events: [
             // Damage
@@ -37,40 +36,30 @@ var registerStates = function( player ){
             {name: 'calmDownEvent'    , from: ['grapplingAttack'], to: 'grapplingStill'},
             {name: 'releaseGrapEvent' , from: ['grapplingStill', 'grapplingMove'], to: 'falling'},
             {name: 'climbUpEvent'     , from: ['grapplingStill', 'grapplingMove'], to: 'climbUp'},
-            {name: 'adjustEvent'      , from: 'climbUp', to: 'neutral'},
+            {name: 'adjustEvent'      , from: 'climbUp', to: 'crouching'},
             // Testing
             {name: 'testEvent'        , from: '*', to: 'test'},
             {name: 'revertTestEvent'  , from: '*', to: 'neutral'}
         ],
         callbacks : {
-            onenterclimbUpEvent: function(event, from, to, obj) {
-                // THIS HAS TO USE PHASER TWEENS ANIMATIONS INSTEAD OF CHANGING THE POSITION.
-
-                //console.log('climbing '+obj.dir);
+            onenterclimbUp: function(event, from, to, obj) {
                 if(obj.dir === 'up'){
-                    obj.player.body.y = obj.player.body.y - 32;
-                } else {
-                    obj.player.body.y = obj.player.body.y + 16;
+                    KageClone.game.add.tween( player ).to( {y: obj.player.body.y -40}, 400, "Sine.easeInOut", true);
                 }
                 animations
                     .play('climb_'+obj.dir, 8, false, false)
-                    .onComplete.add(function () {  
-
-                        if(obj.dir === 'up'){
-                            obj.player.body.y = obj.player.body.y - 32;
-                        } else {
-                            obj.player.body.y = obj.player.body.y + 16;
-                        }
-                        //console.log('animation complete, returning to neutral');
-                        obj.player.sm.revertTestEvent();
-                        //obj.player.sm.transition();
+                    .onComplete.add(function () {
+                        obj.player.sm.adjustEvent();
                     }, obj.player);
                 return StateMachine.ASYNC;
             },
+            onleaveclimbUp: function(event, from, to) {
+                player.body.gravity.y = player.grav;
+                player.grappling = false;
+            },            
             onentergrapplingStill: function(event, from, to, msg){
                 player.body.velocity.y = 0;
                 player.body.gravity.y = 0;
-                console.log('grappling mode entered!');
                 animations.play('grapple');
             },
             ongrapplingMove: function(event, from, to, msg){
@@ -80,11 +69,10 @@ var registerStates = function( player ){
                 animations
                     .play('grapple_at', 8, false, false)
                     .onComplete.add(function () {  
-                        //console.log('animation complete, returning to calmness');
                         player.sm.calmDownEvent();
                     }, player);
 
-                return StateMachine.ASYNC; // tell StateMachine to defer next state until we call transition (in slideUp callback above)
+                return StateMachine.ASYNC;
             },
             onenterneutral: function(event, from, to, msg) { 
                 animations.stop();
@@ -92,20 +80,17 @@ var registerStates = function( player ){
                 player.isAttacking = false;
             },
             onleaveneutral: function(event, from, to, msg) { 
-                ////console.log('leaving neutral state to: ' + to); 
             },
             onenterjumping: function(event, from, to, player){
                 animations.play('jump');
                 player.body.velocity.y -= player.jspd;
             },
             onenterfalling: function(event, from, to){
-                //player.setBodySize('jump');
                 player.body.gravity.y = player.grav;
                 player.grappling = false;
                 animations.play('jump');
             },
             onleavefalling: function(){
-                //player.setBodySize('normal');
             },
             onrunning: function(event, from, to, isInFloor){
                 //player.body.velocity.x += player.scale.x * player.spd;
@@ -113,34 +98,29 @@ var registerStates = function( player ){
             },
             onentergrnAttack: function(event, from, to){
                 player.isAttacking = true;
-
                 if(from === 'crouching'){
                     animations
                         .play('duck_at', 8, false, false)
                         .onComplete.add(function () {  
-                            //console.log('animation complete, stop attacking');
                             player.sm.calmDownEvent();
                         }, player);
                 } else {
                     animations
                         .play('ground_at', 8, false, false)
                         .onComplete.add(function () {  
-                            //console.log('animation complete, stop attacking');
                             player.sm.calmDownEvent();
                         }, player);
                 }
-
-                return StateMachine.ASYNC; // tell StateMachine to defer next state until we call transition (in slideUp callback above)
+                return StateMachine.ASYNC;
             },
             onenterairAttack: function(event, from, to, player){
                 animations
                     .play('jump_at', 8, false, false)
                     .onComplete.add(function () {  
-                        //console.log('animation complete, returning to calmness');
                         player.sm.calmDownEvent();
                     }, player);
 
-                return StateMachine.ASYNC; // tell StateMachine to defer next state until we call transition (in slideUp callback above)
+                return StateMachine.ASYNC;
             },
             oncrouching: function(){
                 animations.play('duck');

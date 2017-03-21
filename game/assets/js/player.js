@@ -36,7 +36,6 @@ NinjaPlayer = function NinjaPlayer(game, startPoint) {
     this.body.setSize(24, 32, 8, 8);
     // Finally add the sprite to the game
     game.add.existing(this);
-
     // Get user-input information
     var cursors = KageClone.game.input.keyboard.createCursorKeys();
     var jumpButton = KageClone.game.input.keyboard.addKey(Phaser.Keyboard.S);
@@ -44,19 +43,6 @@ NinjaPlayer = function NinjaPlayer(game, startPoint) {
     //var cursors.a = KageClone.game.input.keyboard.addKey(Phaser.Keyboard.A);
     this.wasPressingAttack = false;
     this.wasPressingJump = false;
-
-    /*
-    this.setBodySize = function( mode ){
-        switch (mode) {
-            case 'jump':
-                this.body.setSize(24, 32, 8, 0);
-                break;
-            default:
-                this.body.setSize(24, 32, 8, 8);
-                break;
-        }
-    }
-    */
 
     this.getMovement = function() {
         var xm = 0;
@@ -95,6 +81,7 @@ NinjaPlayer = function NinjaPlayer(game, startPoint) {
     registerStates( this );
 
     // Grappling Hitbox
+    /*
     var gpx = this.gHitBox = game.make.sprite(-12, -20, 'pix');
     gpx.width = 24;
     gpx.height = 8;
@@ -104,6 +91,7 @@ NinjaPlayer = function NinjaPlayer(game, startPoint) {
     gpx.physicsBodyType = Phaser.Physics.ARCADE;
 
     this.addChild( gpx );
+    */
 
     /*
     NORMAL
@@ -123,7 +111,7 @@ NinjaPlayer = function NinjaPlayer(game, startPoint) {
     var apx = this.aHitBox = game.make.sprite(4, -12, 'pix');
     apx.width = 16;
     apx.height = 32;
-    apx.alpha = 0.5;
+    apx.alpha = 0; // was 0.5
     apx.tint = "0xFF0000"; // Red-ish
     //apx.enableBody = true;
     //apx.physicsBodyType = Phaser.Physics.ARCADE;
@@ -183,7 +171,6 @@ function getTileProperties( layer, xcoord, ycoord ) {
     var tile2 = KageClone.game.map.getTile(x, y2, layer);
 
     if( tile && tile.properties ){
-        // Note: JSON.stringify will convert the object tile properties to a string
         dbug.tileprops = '(y1): '+JSON.stringify( tile.properties );
         return tile.properties.grappleEnabled;
     } else if(tile2 && tile2.properties){
@@ -220,7 +207,6 @@ NinjaPlayer.prototype.update = function() {
     } else {
         dbug.hitEnemy = false;
     }
-
     var fsm = this.sm;
 
     switch(this.controlMode) {
@@ -253,47 +239,24 @@ NinjaPlayer.prototype.update = function() {
             var isPressingAttack = this.hasPressedAttack();
             var self = this;
             var grapplingMode = false;
-
-            // IT KINDA WORKS
-            /*
-            if(nowCeiled && ym > 0){
-                fsm.testEvent({'dir':'up', 'player':this});
-            } else if(nowGrounded && ym < 0){
-                fsm.testEvent({'dir':'down', 'player':this});
-            }
-            */
-            //KageClone.game.physics.arcade.overlap(self, KageClone.game.grapplingLimitsLayer, collisionHandler, null, this);
-
-            // Check collision for grappling
-            //var nowCeiled = (this['gHitBox'].body.blocked.up);
-            //console.log(this['gHitBox'].body)
-            
+            var isPressingUp = cursors.up.isDown;
+          
             if(nowCeiled){
                 var isGrappable = getTileProperties( KageClone.game.blockedLayer, Math.ceil(this.world.x), Math.floor(this.world.y - 24) );
                 if(isGrappable){
+                    console.log('hooking up event')
                     fsm.hookEvent();
                     this.grappling = true;
+                    // small adjust to sync 'grappling' height
+                    this.body.y = this.body.y + 8;
                 }
             }
-/*
-            if(nowCeiled){
-                //http://www.html5gamedevs.com/topic/19311-detecting-the-collision-side/
-                //https://phaser.io/examples/v2/arcade-physics/custom-sprite-vs-group --->
-                // game.physics.arcade.overlap(sprite, group, collisionHandler, null, this);
-                fsm.hookEvent();
-                this.grappling = true;
-            }
-*/
+    
             if( !this.grappling ){
 
                 if (nowGrounded && !wasGrounded || nowGrounded && fsm.is( 'falling' )) {
                     fsm.hitGroundEvent();
                 }
-                /*
-                if (!nowGrounded && wasGrounded && !jumpPressed) {
-                    fsm.fallEvent();
-                }
-                */
                 if (!nowGrounded && wasGrounded) {
                     fsm.fallEvent();
                 }
@@ -305,13 +268,7 @@ NinjaPlayer.prototype.update = function() {
                         this.body.velocity.x += this.scale.x * this.spd;
                     }
                 }
-                /*
-                if (ym > 0 && releasedJump && nowGrounded) {
-                    releasedJump = false;
-                    fsm.jumpEvent();
-                }
-                */
-                if (ym > 0 && !wasJumping && nowGrounded){
+                if (jumpPressed && !wasJumping && nowGrounded){
                     fsm.jumpEvent( self );
                 } else if(!nowGrounded){
                     fsm.fallEvent();
@@ -343,27 +300,25 @@ NinjaPlayer.prototype.update = function() {
                 }
                 if (!xm) {
                     fsm.stopGrapEvent();
-                }
-                if (jumpPressed && (fsm.is( 'grapplingStill' ) || fsm.is( 'grapplingMove' )) ){
+                }             
+                if (ym < 0 && (fsm.is( 'grapplingStill' ) || fsm.is( 'grapplingMove' )) ){
                     fsm.releaseGrapEvent();
                 }
                 if(!wasAttacking && isPressingAttack){
                     fsm.grapAttackEvent( self );
                 }
-                /*
-                Needs adjustment of ym > 0
-                if(ym > 0 && !isPressingAttack && fsm.is( 'grapplingStill' ) ){
+                if(!this.wasPressingUp && isPressingUp && !isPressingAttack && fsm.is( 'grapplingStill' ) ){
                     fsm.climbUpEvent( {'dir':'up', 'player':self} );
                 }
-                */
             }
             if( fsm.is( 'neutral' ) || fsm.is('grapplingStill') ){
-                // Correct minimal out-of-focus effect (pixel approximation)
+                // Correct out-of-focus effect (pixel approximation)
                 this.body.x = Math.round(this.body.x);
             }
             // Update values for next frame
             this.wasPressingAttack = this.hasPressedAttack();
             this.wasPressingJump = this.hasPressedJump();
+            this.wasPressingUp =  cursors.up.isDown;
             break;
 
         case 'experimental':

@@ -48,13 +48,10 @@ function create() {
     "use strict";
     KageClone.game.physics.startSystem( Phaser.Physics.ARCADE );
     //KageClone.game.physics.arcade.TILE_BIAS = 40;
-
     backgroundGroup = KageClone.game.add.group();
-
     //KageClone.game.world.setBounds(0, 0, 3000, 300);
     //KageClone.game.stage.backgroundColor = '#337799';
     KageClone.game.stage.backgroundColor = '#000000';
-
     //var startLoc = new Phaser.Point(32, 32);  // was 320, 2400
     var startLoc = new Phaser.Point( 636, 88 );  // was 320, 2400
     ninja = new NinjaPlayer( KageClone.game, startLoc );
@@ -64,12 +61,9 @@ function create() {
     cursors.s = KageClone.game.input.keyboard.addKey(Phaser.Keyboard.S);
     cursors.d = KageClone.game.input.keyboard.addKey(Phaser.Keyboard.D);
     cursors.a = KageClone.game.input.keyboard.addKey(Phaser.Keyboard.A);
-
     // Make the camara follow the player (for now)
-    //KageClone.game.camera.follow( ninja, Phaser.Camera.FOLLOW_PLATFORMER, 0.9, 0.5);
     KageClone.game.camera.follow( ninja, Phaser.Camera.FOLLOW_PLATFORMER, 0.9, 0.6);
     //KageClone.game.camera.deadzone = new Phaser.Rectangle(400/2, 224/2, 25, 25);
-
     KageClone.game.map = KageClone.game.add.tilemap('initial-level');
     //the first parameter is the tileset name as specified in Tiled, the second is the key to the asset
     //KageClone.game.map.addTilesetImage('32x32_tileset', 'gameTiles');
@@ -82,7 +76,6 @@ function create() {
     //create layer
     //KageClone.game.back = KageClone.game.map.createLayer('background');
     KageClone.game.blockedLayer = KageClone.game.map.createLayer('blockedLayer');
-    
     KageClone.game.world.sendToBack( KageClone.game.blockedLayer );
     //KageClone.game.gameBkg = KageClone.game.map.createLayer('gameBkg');
     KageClone.game.blockedLayer.scale.set(1);
@@ -100,7 +93,6 @@ function create() {
     // Pause on pressing 'P'
     pauseKey = KageClone.game.input.keyboard.addKey(Phaser.Keyboard.P);
     pauseKey.onDown.add(togglePauseMenu);
-
 /*
     var hud = new HUD(KageClone.game, {x:0, y:0}, 'hudback');
     hud.setHealth(50);
@@ -118,15 +110,15 @@ function create() {
     KageClone.game.scale.fullScreenScaleMode = Phaser.ScaleManager.SHOW_ALL;
     KageClone.game.input.onDown.add(goFullScreen, this);
 
+    // FAKE ENEMIES
     enemyGroup = KageClone.game.add.group();
     enemyGroup.enableBody = true;
     enemyGroup.physicsBodyType = Phaser.Physics.ARCADE;
-
     enemyGroup.create(567, 88, 'fakeEnemy');
     enemyGroup.create(921, 16, 'fakeEnemy').scale.setTo(-1,1);;
     enemyGroup.create(1206, 104, 'fakeEnemy');
     enemyGroup.create(1569, 112, 'fakeEnemy').scale.setTo(-1,1);
-}
+};
 
 var darkScreen;
 var pauseMenu;
@@ -186,11 +178,11 @@ function togglePauseMenu() {
         cursors.d = KageClone.game.input.keyboard.addKey(Phaser.Keyboard.D);
         cursors.a = KageClone.game.input.keyboard.addKey(Phaser.Keyboard.A);
     }
-}
+};
 
 function update() {
     "use strict";
-}
+};
 
 function goFullScreen() {
     if (KageClone.game.scale.isFullScreen) {
@@ -198,7 +190,7 @@ function goFullScreen() {
     } else {
         KageClone.game.scale.startFullScreen(false);
     }
-}
+};
 
 function render() {
     "use strict";
@@ -210,17 +202,14 @@ function render() {
     var xoffset = 10;
     if(!KageClone.shouldDebug){
         KageClone.game.debug.text('FSM: '+dbug.state, xoffset, KageClone.game.camera.view.height/2, '#FF0000', '15px Arial');
-        KageClone.game.debug.text('(P) to pause, (S) to jump/relasegrappling (UpArrow) to jump_GRAPPLING, (D) to attack', xoffset, 12, myFont.color, myFont.desc );
-        KageClone.game.debug.text('(O) to toggle debug (needs movement for the bounding boxes to appear)', xoffset, 24, myFont.color, myFont.desc);
+        KageClone.game.debug.text('[S]: jump/grapple, [D]: attack, [Up] (while grappling): climb, [Down] (while grappling): release', xoffset, 12, myFont.color, myFont.desc );
+        KageClone.game.debug.text('[O]: toggle debug (needs movement for the bounding boxes to appear)', xoffset, 24, myFont.color, myFont.desc);
         KageClone.game.debug.text('TileProps: '+dbug.tileprops, xoffset, KageClone.game.camera.view.height-32,  myFont.color, myFont.desc);
         KageClone.game.debug.text('EnemyHit: '+dbug.hitEnemy, xoffset, KageClone.game.camera.view.height-16,  myFont.color, myFont.desc);
-        //KageClone.game.debug.text('GrapplingHit: '+dbug.hitGrapple, xoffset, KageClone.game.camera.view.height-32,  myFont.color, myFont.desc);
     } else{ 
         //KageClone.game.debug.cameraInfo(KageClone.game.camera, 32, 160);
-        //console.log(ninja)
         KageClone.game.debug.text('FSM: '+dbug.state, xoffset, KageClone.game.camera.view.height/2, '#FF0000', '15px Arial');
         KageClone.game.debug.bodyInfo(ninja, xoffset, 22);
-        //KageClone.game.debug.text('Weapon: '+ninja.currentWeapon.display, xoffset, 544);
         KageClone.game.debug.text('render FPS: ' + (KageClone.game.time.fps || '--') , 325, 14, "#00ff00");
         if (KageClone.game.time.suggestedFps !== null){
             KageClone.game.debug.text('suggested FPS: ' + KageClone.game.time.suggestedFps, 325, 28, "#00ff00");
@@ -233,18 +222,17 @@ function render() {
         KageClone.game.debug.text('Gravity: '+ ninja.body.gravity.y, xoffset, 205, myFont.color, myFont.desc);
         KageClone.game.debug.text('Ground Friction: '+ ninja.frictionX, xoffset, 215, myFont.color, myFont.desc);
         KageClone.game.debug.text('Air Friction: '+ ninja.airFrictionX, xoffset, 225, myFont.color, myFont.desc);
-
-        KageClone.game.debug.body(ninja) 
+        // Ninja data
+        KageClone.game.debug.body(ninja);
     }
-
-}
+};
 
 function toggleDebug() {
     "use strict";
     KageClone.shouldDebug = !KageClone.shouldDebug;
-}
+};
 
 // Dev 640 x 480 ||  NES 16:9 ---> 426 x 240  || Original NES Resolution ---> 256 x 240
-KageClone.game = new Phaser.Game(426, 240, Phaser.CANVAS, 'Kage', { preload: preload, create: create, update: update, render: render }, false, false );
+KageClone.game = new Phaser.Game(256, 240, Phaser.CANVAS, 'Kage', { preload: preload, create: create, update: update, render: render }, false, false );
 
 
