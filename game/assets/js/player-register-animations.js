@@ -1,3 +1,7 @@
+/**
+ * registerAnimations register animations for a given sprite
+ * @param {NinjaPlayer} player - a instance of NinjaPlayer class
+ */
 var registerAnimations = function( player ){
     'use strict';
     var animationList, key, fps, loop;

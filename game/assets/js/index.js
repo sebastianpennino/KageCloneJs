@@ -63,6 +63,8 @@ function create() {
     cursors.a = KageClone.game.input.keyboard.addKey(Phaser.Keyboard.A);
     // Make the camara follow the player (for now)
     KageClone.game.camera.follow( ninja, Phaser.Camera.FOLLOW_PLATFORMER, 0.9, 0.6);
+    //KageClone.game.camera.shake(0.05, 10000, false, Phaser.Camera.SHAKE_VERTICAL, true);
+    
     //KageClone.game.camera.deadzone = new Phaser.Rectangle(400/2, 224/2, 25, 25);
     KageClone.game.map = KageClone.game.add.tilemap('initial-level');
     //the first parameter is the tileset name as specified in Tiled, the second is the key to the asset
@@ -118,6 +120,15 @@ function create() {
     enemyGroup.create(921, 16, 'fakeEnemy').scale.setTo(-1,1);;
     enemyGroup.create(1206, 104, 'fakeEnemy');
     enemyGroup.create(1569, 112, 'fakeEnemy').scale.setTo(-1,1);
+
+    // If my camera is already following a target
+    if (KageClone.game.camera.target) {  
+        //console.log('!')
+        // Unfollow the target
+        //KageClone.game.camera.follow(null);
+        // Move the camera to the center of a planet, adjusting for the camera being 'centered' at the top-left.
+        //KageClone.game.add.tween(KageClone.game.camera).to( {y: [(KageClone.game.camera.y -50),(KageClone.game.camera.y +50)] }, 1500, Phaser.Easing.Quadratic.InOut, true, 500, -1);
+    }
 };
 
 var darkScreen;

@@ -1,3 +1,7 @@
+/**
+ * registerStates register states for a given sprite
+ * @param {NinjaPlayer} player - a instance of NinjaPlayer class
+ */
 var registerStates = function( player ){
     'use strict';
     var animations = player.animations;
@@ -28,6 +32,7 @@ var registerStates = function( player ){
             {name: 'fallEvent'        , from: ['neutral', 'running','jumping'], to: 'falling'},
             {name: 'hitGroundEvent'   , from: 'falling', to: 'neutral'},
             // Player control: SoftPlatformDown
+            {name: 'climbDownEvent'   , from: 'crouching', to: 'climbDown'},
             // Player control: Grappling and SoftPlatformUP
             {name: 'hookEvent'        , from: '*', to: 'grapplingStill'},
             {name: 'moveGrapEvent'    , from: 'grapplingStill', to: 'grapplingMove'},
@@ -56,7 +61,19 @@ var registerStates = function( player ){
             onleaveclimbUp: function(event, from, to) {
                 player.body.gravity.y = player.grav;
                 player.grappling = false;
-            },            
+            },
+            onenterclimbDown: function(event, from, to, obj) {
+                if(obj.dir === 'down'){
+                    KageClone.game.add.tween( player ).to( {y: obj.player.body.y +54}, 350, "Sine.easeOut", true);
+                }
+                animations
+                    .play('climb_'+obj.dir, 8, false, false)
+                    .onComplete.add(function () {
+                        obj.player.grappling = true;
+                        obj.player.sm.hookEvent();
+                    }, obj.player);
+                return StateMachine.ASYNC;
+            },
             onentergrapplingStill: function(event, from, to, msg){
                 player.body.velocity.y = 0;
                 player.body.gravity.y = 0;
