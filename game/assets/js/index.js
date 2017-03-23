@@ -1,12 +1,13 @@
 var Phaser  = Phaser  || {};
 var KageClone = KageClone || {};
-KageClone.version = "0.0.2a";
+KageClone.version = "0.0.3a";
 KageClone.shouldDebug = false;
 KageClone.getVersion = function () {
     "use strict";
     return this.version;
 };
 if(!KageClone.shouldDebug){
+    // destroy console logs
     window.console.log = function(){};
 }
 
@@ -105,7 +106,7 @@ function togglePauseMenu() {
         // Create a pause text in the center of the screen
         pause_label = KageClone.game.add.text(camHorCenter, camVertCenter, 'Pause', { font: '24px Arial', fill: '#fff' });
         pause_label.anchor.setTo(0.5, 0.5);
-        pause_legend = KageClone.game.add.text(camHorCenter, camVertCenter+32, 'Press Enter to select a weapon', { font: '12px Arial', fill: '#fff', align: 'right' });
+        pause_legend = KageClone.game.add.text(camHorCenter, camVertCenter+32, 'Press Enter to select a weapon (pausing breaks the game for now)', { font: '12px Arial', fill: '#fff', align: 'right' });
         pause_legend.anchor.setTo(0.5, 0.5);
         // Create a new menu at x-144 y+48 using pauseMenu asset
         pauseMenu = new PauseMenu(KageClone.game, {x:camHorCenter-144, y:camVertCenter+48}, 'pauseMenu', {xpos:0, ypos:0});
@@ -168,29 +169,42 @@ function render() {
     };
     var xoffset = 10;
     if(!KageClone.shouldDebug){
+        var hash1 = {
+            '[D]'     : 'Attack',
+            '[F]'     : 'Jump/Grapple/Climb',
+            '[Arrows]': 'Move/duck',
+            '[O]'     : 'toggle debug (needs movement to start)',
+            '[P]'     : 'Pause the game',
+        };
+        KageClone.Utils.addDebugText(hash1, 8, 12, 10, '#00FF00', '9px Arial');
+
         KageClone.game.debug.text('FSM: '+dbug.state, xoffset, KageClone.game.camera.view.height/2, '#FF0000', '15px Arial');
-        KageClone.game.debug.text('[S]: jump/grapple, [D]: attack, [Up] (while grappling): climb, [Down] (while grappling): release', xoffset, 12, myFont.color, myFont.desc );
-        KageClone.game.debug.text('[O]: toggle debug (needs movement for the bounding boxes to appear)', xoffset, 24, myFont.color, myFont.desc);
         KageClone.game.debug.text('TileProps: '+dbug.tileprops, xoffset, KageClone.game.camera.view.height-32,  myFont.color, myFont.desc);
         KageClone.game.debug.text('EnemyHit: '+dbug.hitEnemy, xoffset, KageClone.game.camera.view.height-16,  myFont.color, myFont.desc);
-    } else{ 
-        //KageClone.game.debug.cameraInfo(KageClone.game.camera, 32, 160);
+    } else{
+
         KageClone.game.debug.text('FSM: '+dbug.state, xoffset, KageClone.game.camera.view.height/2, '#FF0000', '15px Arial');
-        KageClone.game.debug.bodyInfo(ninja, xoffset, 22);
-        KageClone.game.debug.text('FPS: ' + (KageClone.game.time.fps || '--') , 180, 205, myFont.color2, myFont.desc);
-        if (KageClone.game.time.suggestedFps !== null){
-            KageClone.game.debug.text('suggested: ' + KageClone.game.time.suggestedFps, 180, 215, myFont.color2, myFont.desc);
-            KageClone.game.debug.text('desired: ' + KageClone.game.time.desiredFps, 180, 225, myFont.color2, myFont.desc);
+        var hash2 = {
+            'FPS'       : KageClone.game.time.fps,
+            'suggested' : KageClone.game.time.suggestedFps,
+            'desired'   : KageClone.game.time.desiredFps
+        };
+        KageClone.Utils.addDebugText(hash2, 180, 205, 10, '#00FF00', '9px Arial');
+        var hash3 = {
+            'Speed'           : ninja.spd,
+            'Jump Speed'      : ninja.jspd,
+            'Jump Distance'   : ninja.jump_distance_max,
+            'Jump Height Max' : ninja.jump_height_max,
+            'Gravity'         : ninja.body.gravity.y,
+            'Ground Friction' : ninja.frictionX,
+            'Air Friction'    : ninja.airFrictionX
         }
-        KageClone.game.debug.text('Speed: '+ ninja.spd , xoffset, 165, myFont.color, myFont.desc);
-        KageClone.game.debug.text('Jump Speed: '+ ninja.jspd , xoffset, 175, myFont.color, myFont.desc);
-        KageClone.game.debug.text('Jump Distance: '+ ninja.jump_distance_max, xoffset, 185, myFont.color, myFont.desc);
-        KageClone.game.debug.text('Jump Height Max: '+ ninja.jump_height_max, xoffset, 195, myFont.color, myFont.desc);
-        KageClone.game.debug.text('Gravity: '+ ninja.body.gravity.y, xoffset, 205, myFont.color, myFont.desc);
-        KageClone.game.debug.text('Ground Friction: '+ ninja.frictionX, xoffset, 215, myFont.color, myFont.desc);
-        KageClone.game.debug.text('Air Friction: '+ ninja.airFrictionX, xoffset, 225, myFont.color, myFont.desc);
+        KageClone.Utils.addDebugText(hash3, 8, 165, 10, '#FFFFFF', '9px Arial');
         // Ninja data
+        KageClone.game.debug.bodyInfo(ninja, xoffset, 22);
         KageClone.game.debug.body(ninja);
+        // Camera data
+        //KageClone.game.debug.cameraInfo(KageClone.game.camera, xoffset, 32);
     }
 };
 
@@ -200,6 +214,6 @@ function toggleDebug() {
 };
 
 // Dev 640 x 480 ||  NES 16:9 ---> 426 x 240  || Original NES Resolution ---> 256 x 240
-KageClone.game = new Phaser.Game(640, 240, Phaser.CANVAS, 'Kage', { preload: preload, create: create, update: update, render: render }, false, false );
+KageClone.game = new Phaser.Game(426, 240, Phaser.CANVAS, 'Kage', { preload: preload, create: create, update: update, render: render }, false, false );
 
 

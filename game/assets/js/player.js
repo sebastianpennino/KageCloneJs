@@ -20,6 +20,7 @@ NinjaPlayer = function NinjaPlayer(game, startPoint) {
     registerAnimations( this );
     // Physics properties of the player
     this.spd                     = 36; // v sub x
+    this.grapplingSpd            = this.spd/2;
     this.jump_height_max         = 64; // h.
     this.jump_distance_max       = 24; // (x sub h)
     this.jump_distance_to_peak   = this.jump_distance_max / 2; // x sub h
@@ -36,9 +37,9 @@ NinjaPlayer = function NinjaPlayer(game, startPoint) {
     var specialButton = KageClone.game.input.keyboard.addKey(Phaser.Keyboard.A);
     var jumpButton    = KageClone.game.input.keyboard.addKey(Phaser.Keyboard.F);
     var attackButton  = KageClone.game.input.keyboard.addKey(Phaser.Keyboard.D);
-    this.wasPressingSpecial = false;
     this.wasPressingAttack  = false;
     this.wasPressingJump    = false;
+
     // Get xm and ym
     this.getMovement = function() {
         var xm = 0;
@@ -185,8 +186,8 @@ function checkOverlapWhileAttacking(playerSprite, groupOfSprites, prop) {
 
 NinjaPlayer.prototype.update = function() {
     'use strict';
-    // Internal value
-    var self = this;
+    var self = this, fsm = this.sm, mov = this.getMovement(), xm= mov.xm, ym= mov.ym;
+
     //  Collide the this with the platforms
     KageClone.game.physics.arcade.collide(this, KageClone.game.blockedLayer, collisionHandler, processCallback);
     // Check collision with enemies
@@ -195,37 +196,29 @@ NinjaPlayer.prototype.update = function() {
     } else {
         dbug.hitEnemy = false;
     }
-    var fsm = this.sm;
     // Apply friction
     this.body.velocity.x = this.body.velocity.x * this.frictionX;
     // Get current state from the state machine
     dbug.state = fsm.current;
-    // Get movement
-    var mov = this.getMovement(),
-        xm  = mov.xm, 
-        ym  = mov.ym;
+
     //console.log( fsm.current, xm, ym, xv, yv  );
     //console.log( fsm.transitions() );
-    var wasGrounded  = fsm.is( 'crouching' ) || fsm.is( 'neutral' ) || fsm.is( 'running' );
-    var nowGrounded  = (this.body.touching.down || this.body.blocked.down);
-    var nowCeiled    = (this.body.touching.up || this.body.blocked.up);
-    var wasDown      = fsm.is( 'crouching' );
-    var nowDown      = ym < 0;
-    var wasJumping   = this.wasPressingJump;
-    var jumpPressed  = this.hasPressedJump();
-    var wasAttacking = fsm.is('airAttackEvent') || fsm.is('grnAttackEvent') || this.wasPressingAttack;
+    var wasGrounded       = fsm.is( 'crouching' ) || fsm.is( 'neutral' ) || fsm.is( 'running' );
+    var nowGrounded       = (this.body.touching.down || this.body.blocked.down);
+    var nowCeiled         = (this.body.touching.up || this.body.blocked.up);
+    var wasDown           = fsm.is( 'crouching' );
+    var nowDown           = ym < 0;
+    var wasJumping        = this.wasPressingJump;
+    var jumpPressed       = this.hasPressedJump();
+    var wasAttacking      = fsm.is('airAttackEvent') || fsm.is('grnAttackEvent') || this.wasPressingAttack;
     var isPressingAttack  = this.hasPressedAttack();
-    var grapplingMode     = false;
     var isPressingUp      = cursors.up.isDown;
-    var isPressingSpecial = this.hasPressedSpecial();
-    var wasSpecial        = this.wasPressingSpecial;
-    
+    var canClimbDown      = false;
+    var canGrapple        = false;
+
     if(nowCeiled){
-        console.log('0')
-        var canGrapple = getPlatformInfo( KageClone.game.blockedLayer, this.world.x, this.world.y, -1, xm );
+        canGrapple = getPlatformInfo( KageClone.game.blockedLayer, this.world.x, this.world.y, -1, xm );
         if(canGrapple){
-            console.log('1')
-            console.log('hooking up event')
             fsm.hookEvent();
             this.grappling = true;
             // small adjust to sync 'grappling' height
@@ -236,48 +229,44 @@ NinjaPlayer.prototype.update = function() {
     if( !this.grappling ){
         
         if (nowGrounded && !wasGrounded || nowGrounded && fsm.is( 'falling' )) {
-            console.log('2')
             fsm.hitGroundEvent();
         }
         if (!nowGrounded && wasGrounded) {
-            console.log('3')
             fsm.fallEvent();
         }
+
         if (xm && !this.isAttacking && !nowDown) {
-            console.log('4')
-            // side facing
-            this.scale.setTo(xm,1);
+            if(this.scale.x !== xm){
+                this.scale.setTo(xm,1); // Determine the facing side
+            }
             if( !fsm.is( 'crouching' ) ){
-                console.log('5')
-                fsm.moveEvent( nowGrounded );
+                fsm.moveEvent();
                 this.body.velocity.x += this.scale.x * this.spd;
             }
         }
+
         if (jumpPressed && !wasJumping && nowGrounded){
-            console.log('6')
             fsm.jumpEvent( self );
         } else if(!nowGrounded){
-            console.log('7')
             fsm.fallEvent();
         }
+
         if (ym < 0) {
-            console.log('8')
             fsm.duckEvent();
         } else if(wasDown && jumpPressed && !wasJumping){
-            console.log('9')
-            var canClimbDown = getPlatformInfo( KageClone.game.blockedLayer, this.world.x, this.world.y, 1, xm );
+            canClimbDown = getPlatformInfo( KageClone.game.blockedLayer, this.world.x, this.world.y, 1, xm );
             if(canClimbDown){
-                console.log('10')
-                fsm.climbDownEvent( {'dir':'down', 'player':self} );
+                fsm.climbDownEvent( { 'dir' : 'down', 'player' : self } );
             }
         } else if (!ym && wasDown) {
-            console.log('11')
             fsm.standEvent();
         }
-        if (!xm) {
-            console.log('12')
+
+        if (!xm && (this.lastXM !== xm) ) {
+            console.log('12 && (lastXM !== xm)')
             fsm.stopEvent();
         }
+
         if(!wasAttacking && isPressingAttack){
             console.log('13')
             if( nowGrounded && fsm.can('grnAttackEvent') ){
@@ -289,16 +278,15 @@ NinjaPlayer.prototype.update = function() {
         }
     } else {
         if (xm && !this.isAttacking) {
-            // side facing
-            console.log('14')
-            this.scale.setTo(xm,1);
+            if(this.scale.x !== xm){
+                this.scale.setTo(xm,1); // Determine the facing side
+            }
             if( fsm.is( 'grapplingStill' ) || fsm.is( 'grapplingMove' ) ){
-                console.log('15')
                 fsm.moveGrapEvent();
-                this.body.velocity.x += this.scale.x * (this.spd/2);
+                this.body.velocity.x += this.scale.x * this.grapplingSpd;
             }
         }
-        if (!xm) {
+        if (!xm && (this.lastXM !== xm) ) {
             console.log('16')
             fsm.stopGrapEvent();
         }
@@ -315,14 +303,12 @@ NinjaPlayer.prototype.update = function() {
             fsm.climbUpEvent( {'dir':'up', 'player':self} );
         }
     }
-    if( fsm.is( 'neutral' ) || fsm.is('grapplingStill') ){
-        // Correct out-of-focus effect (pixel approximation)
-        this.body.x = Math.round(this.body.x);
-    }
+
     // Update values for next loop
     this.wasPressingAttack  = this.hasPressedAttack();
     this.wasPressingJump    = this.hasPressedJump();
     this.wasPressingUp      = cursors.up.isDown;
     this.wasPressingSpecial = this.hasPressedSpecial();
+    this.lastXM             = xm;
 };
  

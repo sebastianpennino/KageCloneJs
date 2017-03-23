@@ -109,7 +109,7 @@ var registerStates = function( player ){
             },
             onleavefalling: function(){
             },
-            onrunning: function(event, from, to, isInFloor){
+            onrunning: function(event, from, to){
                 //player.body.velocity.x += player.scale.x * player.spd;
                 animations.play('ground_mv');
             },
