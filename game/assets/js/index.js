@@ -6,54 +6,30 @@ KageClone.getVersion = function () {
     "use strict";
     return this.version;
 };
+if(!KageClone.shouldDebug){
+    window.console.log = function(){};
+}
 
 // Will store some public vars for debugging
 var dbug = {};
 
 function preload() {
     "use strict";
-    KageClone.game.load.tilemap('initial-level', 'assets/levels/level_boat_v2.json', null, Phaser.Tilemap.TILED_JSON);
-    KageClone.game.load.image('8x8_blank', 'assets/images/tilesets/8x8_blank.png');
-    KageClone.game.load.image('plan', 'assets/images/kage_level_1_plan.png');
-
-    KageClone.game.load.image('pauseMenu', 'assets/images/pause_menu_back.jpg');
-    KageClone.game.load.image('selectMenu', 'assets/images/pause_menu_select.png');
-    KageClone.game.load.image('blackout', 'assets/images/black.png');
-    KageClone.game.load.image('hudback', 'assets/images/hud_bkg.png');
-    KageClone.game.load.image('hpx', 'assets/images/health_pixel.jpg');
-    KageClone.game.load.image('pix', 'assets/images/grey_pixel.jpg');
-    KageClone.game.load.image('fakeEnemy', 'assets/images/enemy_placeholder.png');
-    // Hayate Atlas
-    KageClone.game.load.atlas('hayate', 'assets/images/hayate/hayate.png', 'assets/images/hayate/hayate_hash.json',Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
-}
-
-function hitOnlyGrappling(player, tile) {
-    "use strict";
-    /*
-    tile.alpha = 0.2;
-    tile.ninjaDestroyed = true;
-    KageClone.game.blockedLayer.dirty = true;
-    return false;
-    */
-    console.log(player, this)
-    return true;
-}
+    loadAssets( KageClone );
+};
 
 var ninja, cursors;
 var debugKey, pauseKey, pause_label, pause_legend;
 var backgroundGroup;
 var enemyGroup;
+var startLoc = new Phaser.Point( 45, 128 );
 
 function create() {
     "use strict";
     KageClone.game.physics.startSystem( Phaser.Physics.ARCADE );
-    //KageClone.game.physics.arcade.TILE_BIAS = 40;
     backgroundGroup = KageClone.game.add.group();
     //KageClone.game.world.setBounds(0, 0, 3000, 300);
-    //KageClone.game.stage.backgroundColor = '#337799';
     KageClone.game.stage.backgroundColor = '#000000';
-    //var startLoc = new Phaser.Point(32, 32);  // was 320, 2400
-    var startLoc = new Phaser.Point( 636, 88 );  // was 320, 2400
     ninja = new NinjaPlayer( KageClone.game, startLoc );
     window.ninja = ninja;
     // Our controls
@@ -63,8 +39,8 @@ function create() {
     cursors.a = KageClone.game.input.keyboard.addKey(Phaser.Keyboard.A);
     // Make the camara follow the player (for now)
     KageClone.game.camera.follow( ninja, Phaser.Camera.FOLLOW_PLATFORMER, 0.9, 0.6);
+    KageClone.game.camera.roundPx = true;
     //KageClone.game.camera.shake(0.05, 10000, false, Phaser.Camera.SHAKE_VERTICAL, true);
-    
     //KageClone.game.camera.deadzone = new Phaser.Rectangle(400/2, 224/2, 25, 25);
     KageClone.game.map = KageClone.game.add.tilemap('initial-level');
     //the first parameter is the tileset name as specified in Tiled, the second is the key to the asset
@@ -81,14 +57,9 @@ function create() {
     KageClone.game.world.sendToBack( KageClone.game.blockedLayer );
     //KageClone.game.gameBkg = KageClone.game.map.createLayer('gameBkg');
     KageClone.game.blockedLayer.scale.set(1);
-    //collision on blockedLayer (block IDs 1 to 4)
+    //collision on blockedLayer (block IDs 1 to 21)
     KageClone.game.map.setCollisionBetween(1, 21, true, 'blockedLayer');
-    //  This will set Tile ID 20 and 21 (grappling, grappling-soft-platform) to call the grapplingEnabled function when collided with
-    KageClone.game.map.setTileIndexCallback(21, hitOnlyGrappling, this);
-    KageClone.game.map.setTileIndexCallback(20, hitOnlyGrappling, this);
-    
     KageClone.game.blockedLayer.resizeWorld();
-    //KageClone.game.gameBkg.resizeWorld();
     // Added debug on pressing 'O'
     debugKey = KageClone.game.input.keyboard.addKey(Phaser.Keyboard.O);
     debugKey.onDown.add(toggleDebug);
@@ -112,23 +83,7 @@ function create() {
     KageClone.game.scale.fullScreenScaleMode = Phaser.ScaleManager.SHOW_ALL;
     KageClone.game.input.onDown.add(goFullScreen, this);
 
-    // FAKE ENEMIES
-    enemyGroup = KageClone.game.add.group();
-    enemyGroup.enableBody = true;
-    enemyGroup.physicsBodyType = Phaser.Physics.ARCADE;
-    enemyGroup.create(567, 88, 'fakeEnemy');
-    enemyGroup.create(921, 16, 'fakeEnemy').scale.setTo(-1,1);;
-    enemyGroup.create(1206, 104, 'fakeEnemy');
-    enemyGroup.create(1569, 112, 'fakeEnemy').scale.setTo(-1,1);
-
-    // If my camera is already following a target
-    if (KageClone.game.camera.target) {  
-        //console.log('!')
-        // Unfollow the target
-        //KageClone.game.camera.follow(null);
-        // Move the camera to the center of a planet, adjusting for the camera being 'centered' at the top-left.
-        //KageClone.game.add.tween(KageClone.game.camera).to( {y: [(KageClone.game.camera.y -50),(KageClone.game.camera.y +50)] }, 1500, Phaser.Easing.Quadratic.InOut, true, 500, -1);
-    }
+    generateEnemies( KageClone );
 };
 
 var darkScreen;
@@ -208,7 +163,8 @@ function render() {
     KageClone.game.blockedLayer.debug = KageClone.shouldDebug;
     var myFont = {
         desc : '9px Arial',
-        color : '#FFFFFF'
+        color : '#FFFFFF',
+        color2: '#00FF00'
     };
     var xoffset = 10;
     if(!KageClone.shouldDebug){
@@ -221,10 +177,10 @@ function render() {
         //KageClone.game.debug.cameraInfo(KageClone.game.camera, 32, 160);
         KageClone.game.debug.text('FSM: '+dbug.state, xoffset, KageClone.game.camera.view.height/2, '#FF0000', '15px Arial');
         KageClone.game.debug.bodyInfo(ninja, xoffset, 22);
-        KageClone.game.debug.text('render FPS: ' + (KageClone.game.time.fps || '--') , 325, 14, "#00ff00");
+        KageClone.game.debug.text('FPS: ' + (KageClone.game.time.fps || '--') , 180, 205, myFont.color2, myFont.desc);
         if (KageClone.game.time.suggestedFps !== null){
-            KageClone.game.debug.text('suggested FPS: ' + KageClone.game.time.suggestedFps, 325, 28, "#00ff00");
-            KageClone.game.debug.text('desired FPS: ' + KageClone.game.time.desiredFps, 325, 42, "#00ff00");
+            KageClone.game.debug.text('suggested: ' + KageClone.game.time.suggestedFps, 180, 215, myFont.color2, myFont.desc);
+            KageClone.game.debug.text('desired: ' + KageClone.game.time.desiredFps, 180, 225, myFont.color2, myFont.desc);
         }
         KageClone.game.debug.text('Speed: '+ ninja.spd , xoffset, 165, myFont.color, myFont.desc);
         KageClone.game.debug.text('Jump Speed: '+ ninja.jspd , xoffset, 175, myFont.color, myFont.desc);
@@ -244,6 +200,6 @@ function toggleDebug() {
 };
 
 // Dev 640 x 480 ||  NES 16:9 ---> 426 x 240  || Original NES Resolution ---> 256 x 240
-KageClone.game = new Phaser.Game(256, 240, Phaser.CANVAS, 'Kage', { preload: preload, create: create, update: update, render: render }, false, false );
+KageClone.game = new Phaser.Game(640, 240, Phaser.CANVAS, 'Kage', { preload: preload, create: create, update: update, render: render }, false, false );
 
 
