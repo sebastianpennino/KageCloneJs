@@ -7,7 +7,7 @@ KageClone.getVersion = function () {
     return this.version;
 };
 if(!KageClone.shouldDebug){
-    // destroy console logs
+    // avoid console logs
     window.console.log = function(){};
 }
 
@@ -88,62 +88,27 @@ function create() {
 };
 
 var darkScreen;
-var pauseMenu;
 
 function togglePauseMenu() {
     "use strict";
     var camHorCenter  = KageClone.game.camera.view.width/2 + KageClone.game.camera.view.x;
     var camVertCenter = KageClone.game.camera.view.height/2 + KageClone.game.camera.view.y;
-    var block;
     if(!KageClone.game.paused){
         // Pause
         KageClone.game.paused = true;
         // Create the darkscreen, scale it to fit the width of the game (the original sprite is 32x32 in size)
         darkScreen = KageClone.game.add.group();
-        block      = darkScreen.create(KageClone.game.camera.view.x, KageClone.game.camera.view.y, 'blackout');
-        block.scale.setTo(KageClone.game.camera.view.width/32, KageClone.game.camera.view.height/32);
-        block.alpha = 0.8;
-        // Create a pause text in the center of the screen
-        pause_label = KageClone.game.add.text(camHorCenter, camVertCenter, 'Pause', { font: '24px Arial', fill: '#fff' });
+        darkScreen.block      = darkScreen.create(KageClone.game.camera.view.x, KageClone.game.camera.view.y, 'blackout');
+        darkScreen.block.scale.setTo(KageClone.game.camera.view.width/32, KageClone.game.camera.view.height/32);
+        darkScreen.block.alpha = 0.4;
+        pause_label = KageClone.game.add.text(camHorCenter, camVertCenter, 'PAUSE', { font: '13px Arial', fill: '#fff' });
         pause_label.anchor.setTo(0.5, 0.5);
-        pause_legend = KageClone.game.add.text(camHorCenter, camVertCenter+32, 'Press Enter to select a weapon (pausing breaks the game for now)', { font: '12px Arial', fill: '#fff', align: 'right' });
-        pause_legend.anchor.setTo(0.5, 0.5);
-        // Create a new menu at x-144 y+48 using pauseMenu asset
-        pauseMenu = new PauseMenu(KageClone.game, {x:camHorCenter-144, y:camVertCenter+48}, 'pauseMenu', {xpos:0, ypos:0});
-        pauseMenu.addSprite(0, 0, 'selectMenu', true);
-        pauseMenu.fillWeapons([
-            { display:'BareHanded'      },
-            { display:'Desert Eagle'    },
-            { display:'Machinegun'      },
-            { display:'Phaser Cannon'   },
-            { display:'Mega Ray Gun'    },
-            { display:'Homming Missiles'}
-        ]);
-        // Register menu keyboard bindings
-        KageClone.game.input.keyboard.addKey(Phaser.Keyboard.DOWN) .onDown.add(PauseMenu.prototype.moveDown , pauseMenu);
-        KageClone.game.input.keyboard.addKey(Phaser.Keyboard.UP)   .onDown.add(PauseMenu.prototype.moveUp   , pauseMenu);
-        KageClone.game.input.keyboard.addKey(Phaser.Keyboard.RIGHT).onDown.add(PauseMenu.prototype.moveRight, pauseMenu);
-        KageClone.game.input.keyboard.addKey(Phaser.Keyboard.LEFT) .onDown.add(PauseMenu.prototype.moveLeft , pauseMenu);
-        KageClone.game.input.keyboard.addKey(Phaser.Keyboard.ENTER).onDown.add(PauseMenu.prototype.announceSelection , pauseMenu);
-
     } else {
-        // Un-pause and clean up pause stuff
+        // Un-pause
         KageClone.game.paused = false;
         pause_label.destroy();
-        pause_legend.destroy();
         darkScreen.destroy();
-        pauseMenu.destroy();
-        // Remove menu keyboard bindings
-        KageClone.game.input.keyboard.removeKey( Phaser.Keyboard.DOWN  );
-        KageClone.game.input.keyboard.removeKey( Phaser.Keyboard.UP    );
-        KageClone.game.input.keyboard.removeKey( Phaser.Keyboard.RIGHT );
-        KageClone.game.input.keyboard.removeKey( Phaser.Keyboard.LEFT  );
-        KageClone.game.input.keyboard.removeKey( Phaser.Keyboard.ENTER );
-        // Re-add standard bindings
-        cursors = KageClone.game.input.keyboard.createCursorKeys();
-        cursors.s = KageClone.game.input.keyboard.addKey(Phaser.Keyboard.S);
-        cursors.d = KageClone.game.input.keyboard.addKey(Phaser.Keyboard.D);
-        cursors.a = KageClone.game.input.keyboard.addKey(Phaser.Keyboard.A);
+        darkScreen.block.destroy();
     }
 };
 
@@ -161,13 +126,9 @@ function goFullScreen() {
 
 function render() {
     "use strict";
-    KageClone.game.blockedLayer.debug = KageClone.shouldDebug;
-    var myFont = {
-        desc : '9px Arial',
-        color : '#FFFFFF',
-        color2: '#00FF00'
-    };
     var xoffset = 10;
+    KageClone.game.blockedLayer.debug = KageClone.shouldDebug;
+    
     if(!KageClone.shouldDebug){
         var hash1 = {
             '[D]'     : 'Attack',
@@ -176,11 +137,11 @@ function render() {
             '[O]'     : 'toggle debug (needs movement to start)',
             '[P]'     : 'Pause the game',
         };
-        KageClone.Utils.addDebugText(hash1, 8, 12, 10, '#00FF00', '9px Arial');
+        KageClone.Utils.addDebugText(hash1, 8, 12, 10, '#00FFFF', '9px Arial');
 
         KageClone.game.debug.text('FSM: '+dbug.state, xoffset, KageClone.game.camera.view.height/2, '#FF0000', '15px Arial');
-        KageClone.game.debug.text('TileProps: '+dbug.tileprops, xoffset, KageClone.game.camera.view.height-32,  myFont.color, myFont.desc);
-        KageClone.game.debug.text('EnemyHit: '+dbug.hitEnemy, xoffset, KageClone.game.camera.view.height-16,  myFont.color, myFont.desc);
+        KageClone.game.debug.text('TileProps: '+dbug.tileprops, xoffset, KageClone.game.camera.view.height-32,  '#FFFFFF', '9px Arial');
+        KageClone.game.debug.text('EnemyHit: '+dbug.hitEnemy, xoffset, KageClone.game.camera.view.height-16,  '#FFFFFF', '9px Arial');
     } else{
 
         KageClone.game.debug.text('FSM: '+dbug.state, xoffset, KageClone.game.camera.view.height/2, '#FF0000', '15px Arial');

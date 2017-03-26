@@ -1,6 +1,6 @@
 {
   "name": "kageclone",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "A 'Kage' / 'Shadow of the ninja' Clone made with javascript",
   "main": "index.js",
   "dependencies": {

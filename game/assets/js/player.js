@@ -97,7 +97,7 @@ NinjaPlayer = function NinjaPlayer(game, startPoint) {
     var apx = this.aHitBox = game.make.sprite(4, -12, 'pix');
     apx.width = 16;
     apx.height = 32;
-    apx.alpha = 0.5; // was 0.5
+    apx.alpha = 0; // was 0.5
     apx.tint = "0xFF0000"; // Red-ish
     //apx.enableBody = true;
     //apx.physicsBodyType = Phaser.Physics.ARCADE;
@@ -111,10 +111,10 @@ NinjaPlayer = function NinjaPlayer(game, startPoint) {
     registerStates( this );
 
     marker = KageClone.game.add.graphics();
-    marker.lineStyle(2, 0xffffff, 1);
+    marker.lineStyle(2, 0xff00ff, 0.5);
     marker.drawRect(0, 0, 8, 8);
     marker2 = KageClone.game.add.graphics();
-    marker2.lineStyle(2, 0x00ff00, 1);
+    marker2.lineStyle(2, 0x00ff00, 0.5);
     marker2.drawRect(0, 0, 8, 8);
 };
 
